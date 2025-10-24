@@ -194,27 +194,26 @@ class DauphinDash {
     loadTodayData() {
         const todayData = this.getTodayData();
         
-        // Only load data if fields are empty (don't overwrite user input)
-        const weightInput = document.getElementById('weight-input');
-        const leetcodeInput = document.getElementById('leetcode-input');
-        const workoutCheckbox = document.getElementById('workout-checkbox');
-        
-        if (!weightInput.value) {
-            weightInput.value = todayData.weight || '';
-        }
-        if (!leetcodeInput.value) {
-            leetcodeInput.value = todayData.leetcode || '';
-        }
-        if (!workoutCheckbox.checked && todayData.workout) {
-            workoutCheckbox.checked = todayData.workout;
-        }
+        // Load today's data into the form
+        document.getElementById('weight-input').value = todayData.weight || '';
+        document.getElementById('leetcode-input').value = todayData.leetcode || '';
+        document.getElementById('workout-checkbox').checked = todayData.workout || false;
     }
 
     saveProgress() {
         const today = this.getDateKey();
-        const weight = parseFloat(document.getElementById('weight-input').value);
-        const leetcode = parseInt(document.getElementById('leetcode-input').value) || 0;
-        const workout = document.getElementById('workout-checkbox').checked;
+        const weightInput = document.getElementById('weight-input');
+        const leetcodeInput = document.getElementById('leetcode-input');
+        const workoutCheckbox = document.getElementById('workout-checkbox');
+        
+        if (!weightInput || !leetcodeInput || !workoutCheckbox) {
+            console.error('Form elements not found!');
+            return;
+        }
+        
+        const weight = parseFloat(weightInput.value);
+        const leetcode = parseInt(leetcodeInput.value) || 0;
+        const workout = workoutCheckbox.checked;
         
         this.data[today] = {
             weight: weight || null,
@@ -241,5 +240,11 @@ class DauphinDash {
 
 // Initialize the dashboard when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    new DauphinDash();
+    console.log('Initializing DauphinDash...');
+    try {
+        new DauphinDash();
+        console.log('DauphinDash initialized successfully');
+    } catch (error) {
+        console.error('Error initializing DauphinDash:', error);
+    }
 });

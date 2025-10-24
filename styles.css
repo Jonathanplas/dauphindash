@@ -134,10 +134,11 @@ body {
 .graph-container {
     background: #f8f9fa;
     border-radius: 15px;
-    padding: 30px;
+    padding: 20px;
     border: 1px solid #e9ecef;
     overflow-x: auto;
     min-width: 0;
+    width: 100%;
 }
 
 .graph-legend {
@@ -180,6 +181,7 @@ body {
     width: 100%;
     overflow-x: auto;
     padding: 10px 0;
+    min-width: 500px;
 }
 
 .day-labels {
@@ -203,11 +205,12 @@ body {
 
 .graph {
     display: grid;
-    grid-template-columns: repeat(7, 18px);
-    gap: 3px;
+    grid-template-columns: repeat(7, 20px);
+    gap: 4px;
     flex-shrink: 0;
     width: fit-content;
     position: relative;
+    min-width: 400px;
 }
 
 .week-separator {
@@ -219,13 +222,13 @@ body {
     z-index: 1;
 }
 
-.week-separator:nth-of-type(1) { left: 126px; } /* After week 1 (7 * 18px) */
-.week-separator:nth-of-type(2) { left: 252px; } /* After week 2 (14 * 18px) */
-.week-separator:nth-of-type(3) { left: 378px; } /* After week 3 (21 * 18px) */
+.week-separator:nth-of-type(1) { left: 168px; } /* After week 1 (7 * 24px) */
+.week-separator:nth-of-type(2) { left: 336px; } /* After week 2 (14 * 24px) */
+.week-separator:nth-of-type(3) { left: 504px; } /* After week 3 (21 * 24px) */
 
 .day-cell {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     border-radius: 4px;
     background: #ebedf0;
     cursor: pointer;
@@ -242,8 +245,8 @@ body {
 }
 
 .split-dot-inner {
-    width: 12px;
-    height: 12px;
+    width: 16px;
+    height: 16px;
     position: relative;
     border-radius: 50%;
     background: #ebedf0;
@@ -448,32 +451,34 @@ body {
     }
     
     .graph {
-        grid-template-columns: repeat(7, 14px);
-        gap: 2px;
+        grid-template-columns: repeat(7, 16px);
+        gap: 3px;
+        min-width: 300px;
     }
     
     .day-cell {
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
     }
     
     .split-dot-inner {
-        width: 12px;
-        height: 12px;
+        width: 14px;
+        height: 14px;
     }
     
     .day-label {
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
         font-size: 0.6rem;
     }
     
     .graph-wrapper {
         gap: 5px;
         padding: 5px 0;
+        min-width: 350px;
     }
     
-    .week-separator:nth-of-type(1) { left: 98px; } /* After week 1 (7 * 14px) */
-    .week-separator:nth-of-type(2) { left: 196px; } /* After week 2 (14 * 14px) */
-    .week-separator:nth-of-type(3) { left: 294px; } /* After week 3 (21 * 14px) */
+    .week-separator:nth-of-type(1) { left: 112px; } /* After week 1 (7 * 16px) */
+    .week-separator:nth-of-type(2) { left: 224px; } /* After week 2 (14 * 16px) */
+    .week-separator:nth-of-type(3) { left: 336px; } /* After week 3 (21 * 16px) */
 }

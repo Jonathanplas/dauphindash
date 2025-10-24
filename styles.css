@@ -136,6 +136,8 @@ body {
     border-radius: 15px;
     padding: 30px;
     border: 1px solid #e9ecef;
+    overflow-x: auto;
+    min-width: 0;
 }
 
 .graph-legend {
@@ -175,6 +177,8 @@ body {
     display: flex;
     gap: 10px;
     align-items: flex-start;
+    width: 100%;
+    overflow-x: auto;
 }
 
 .day-labels {
@@ -182,6 +186,7 @@ body {
     flex-direction: column;
     gap: 2px;
     margin-top: 20px;
+    flex-shrink: 0;
 }
 
 .day-label {
@@ -197,9 +202,10 @@ body {
 
 .graph {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(7, 16px);
     gap: 2px;
-    max-width: 100%;
+    flex-shrink: 0;
+    width: fit-content;
 }
 
 .day-cell {
@@ -427,7 +433,7 @@ body {
     }
     
     .graph {
-        grid-template-columns: repeat(7, 1fr);
+        grid-template-columns: repeat(7, 12px);
     }
     
     .day-cell {
@@ -444,5 +450,9 @@ body {
         width: 12px;
         height: 12px;
         font-size: 0.6rem;
+    }
+    
+    .graph-wrapper {
+        gap: 5px;
     }
 }

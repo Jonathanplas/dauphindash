@@ -151,10 +151,12 @@ class DauphinDash {
 
         // Create grid (7 columns for days of week)
         const allDays = months.flatMap(m => m.days);
+        console.log('Total days generated:', allDays.length);
         const weeks = [];
         for (let i = 0; i < allDays.length; i += 7) {
             weeks.push(allDays.slice(i, i + 7));
         }
+        console.log('Total weeks:', weeks.length);
 
         // Add month labels with bracket lines
         this.addMonthLabels(graph, months);

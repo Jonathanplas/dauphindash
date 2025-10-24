@@ -181,7 +181,7 @@ body {
     width: 100%;
     overflow-x: auto;
     padding: 10px 0;
-    min-width: 500px;
+    min-width: 2400px;
 }
 
 .day-labels {
@@ -233,6 +233,7 @@ body {
     width: fit-content;
     position: relative;
     min-width: 400px;
+    grid-auto-rows: 20px;
 }
 
 .week-separator {
@@ -488,6 +489,7 @@ body {
         grid-template-columns: repeat(7, 16px);
         gap: 3px;
         min-width: 300px;
+        grid-auto-rows: 16px;
     }
     
     .day-cell {
@@ -509,7 +511,7 @@ body {
     .graph-wrapper {
         gap: 5px;
         padding: 5px 0;
-        min-width: 350px;
+        min-width: 1800px;
     }
     
     .week-separator:nth-of-type(1) { left: 112px; } /* After week 1 (7 * 16px) */

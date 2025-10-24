@@ -185,10 +185,22 @@ class DauphinDash {
 
     setupEventListeners() {
         const saveButton = document.getElementById('save-button');
-        saveButton.addEventListener('click', () => this.saveProgress());
+        if (saveButton) {
+            saveButton.addEventListener('click', () => {
+                console.log('Save button clicked');
+                this.saveProgress();
+            });
+        } else {
+            console.error('Save button not found!');
+        }
         
         // Load today's data on page load
         this.loadTodayData();
+        
+        // Test form elements
+        console.log('Weight input:', document.getElementById('weight-input'));
+        console.log('LeetCode input:', document.getElementById('leetcode-input'));
+        console.log('Workout checkbox:', document.getElementById('workout-checkbox'));
     }
 
     loadTodayData() {

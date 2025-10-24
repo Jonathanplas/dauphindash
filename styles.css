@@ -203,14 +203,14 @@ body {
     font-weight: 500;
 }
 
-.month-labels-container {
+.quarter-month-labels-container {
     position: relative;
     margin-bottom: 15px;
     height: 25px;
     width: 100%;
 }
 
-.month-label {
+.quarter-month-label {
     position: absolute;
     font-size: 0.8rem;
     color: #4a5568;

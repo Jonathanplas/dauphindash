@@ -106,60 +106,54 @@ class DauphinDash {
         const graph = document.getElementById('contribution-graph');
         graph.innerHTML = '';
 
-        // Generate 3 months for the quarter
-        const months = [];
-        for (let monthOffset = 0; monthOffset < 3; monthOffset++) {
-            const month = (this.currentQuarter * 3) + monthOffset;
-            const year = this.currentYear;
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
+        // Generate the entire quarter as one continuous calendar
+        const quarterStartMonth = this.currentQuarter * 3;
+        const quarterEndMonth = quarterStartMonth + 2;
+        
+        // Get the first day of the quarter (first day of first month)
+        const firstDayOfQuarter = new Date(this.currentYear, quarterStartMonth, 1);
+        
+        // Get the last day of the quarter (last day of last month)
+        const lastDayOfQuarter = new Date(this.currentYear, quarterEndMonth + 1, 0);
+        
+        // Get the first Sunday of the quarter (or before if quarter doesn't start on Sunday)
+        const firstSunday = new Date(firstDayOfQuarter);
+        firstSunday.setDate(firstDayOfQuarter.getDate() - firstDayOfQuarter.getDay());
+        
+        // Get the last Saturday of the quarter (or after if quarter doesn't end on Saturday)
+        const lastSaturday = new Date(lastDayOfQuarter);
+        lastSaturday.setDate(lastDayOfQuarter.getDate() + (6 - lastDayOfQuarter.getDay()));
+        
+        // Create all days from first Sunday to last Saturday
+        const allDays = [];
+        const currentDate = new Date(firstSunday);
+        
+        while (currentDate <= lastSaturday) {
+            const dateKey = this.getDateKey(currentDate);
+            const dayData = this.data[dateKey] || {};
+            const dayMonth = currentDate.getMonth();
+            const dayYear = currentDate.getFullYear();
             
-            // Get the first Sunday of the month (or before if month doesn't start on Sunday)
-            const firstSunday = new Date(firstDay);
-            firstSunday.setDate(firstDay.getDate() - firstDay.getDay());
-            
-            // Get the last Saturday of the month (or after if month doesn't end on Saturday)
-            const lastSaturday = new Date(lastDay);
-            lastSaturday.setDate(lastDay.getDate() + (6 - lastDay.getDay()));
-            
-            // Create all days from first Sunday to last Saturday
-            const allDays = [];
-            const currentDate = new Date(firstSunday);
-            
-            while (currentDate <= lastSaturday) {
-                const dateKey = this.getDateKey(currentDate);
-                const dayData = this.data[dateKey] || {};
-                
-                allDays.push({
-                    date: new Date(currentDate),
-                    dateKey: dateKey,
-                    data: dayData,
-                    isCurrentMonth: currentDate.getMonth() === month,
-                    month: month,
-                    year: year
-                });
-                
-                currentDate.setDate(currentDate.getDate() + 1);
-            }
-            
-            months.push({
-                month: month,
-                year: year,
-                days: allDays
+            allDays.push({
+                date: new Date(currentDate),
+                dateKey: dateKey,
+                data: dayData,
+                isCurrentQuarter: dayMonth >= quarterStartMonth && dayMonth <= quarterEndMonth && dayYear === this.currentYear,
+                month: dayMonth,
+                year: dayYear
             });
+            
+            currentDate.setDate(currentDate.getDate() + 1);
         }
 
         // Create grid (7 columns for days of week)
-        const allDays = months.flatMap(m => m.days);
-        console.log('Total days generated:', allDays.length);
         const weeks = [];
         for (let i = 0; i < allDays.length; i += 7) {
             weeks.push(allDays.slice(i, i + 7));
         }
-        console.log('Total weeks:', weeks.length);
 
-        // Add month labels with bracket lines
-        this.addMonthLabels(graph, months);
+        // Add quarter month labels
+        this.addQuarterMonthLabels(graph, quarterStartMonth, quarterEndMonth);
 
         weeks.forEach((week, weekIndex) => {
             week.forEach(day => {
@@ -168,13 +162,8 @@ class DauphinDash {
                 cell.dataset.date = day.dateKey;
                 
                 // Fade out days not in current quarter
-                const currentMonth = new Date().getMonth();
-                const currentQuarter = Math.floor(currentMonth / 3);
-                const dayQuarter = Math.floor(day.month / 3);
-                if (dayQuarter !== currentQuarter) {
+                if (!day.isCurrentQuarter) {
                     cell.classList.add('other-quarter');
-                } else if (!day.isCurrentMonth) {
-                    cell.classList.add('other-month');
                 }
                 
                 // Create split dot with thirds
@@ -349,7 +338,7 @@ class DauphinDash {
         }, 2000);
     }
     
-    addMonthLabels(graph, months) {
+    addQuarterMonthLabels(graph, quarterStartMonth, quarterEndMonth) {
         const monthNames = [
             'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
             'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
@@ -357,32 +346,50 @@ class DauphinDash {
         
         // Create month labels container
         const labelsContainer = document.createElement('div');
-        labelsContainer.className = 'month-labels-container';
+        labelsContainer.className = 'quarter-month-labels-container';
         
         const cellWidth = 20; // Same as .day-cell width
         const gap = 4; // Same as grid gap
         
-        months.forEach((monthData, index) => {
+        // Create labels for each month in the quarter
+        for (let month = quarterStartMonth; month <= quarterEndMonth; month++) {
             const monthLabel = document.createElement('div');
-            monthLabel.className = 'month-label';
-            monthLabel.textContent = monthNames[monthData.month];
+            monthLabel.className = 'quarter-month-label';
+            monthLabel.textContent = monthNames[month];
             
             // Calculate position based on the first day of the month
-            const firstDayOfMonth = monthData.days.find(day => day.isCurrentMonth);
-            if (firstDayOfMonth) {
-                const dayOfWeek = firstDayOfMonth.date.getDay();
-                const dayOfMonth = firstDayOfMonth.date.getDate();
-                const weekNumber = Math.floor((dayOfMonth - 1) / 7);
-                const position = (weekNumber * 7 + dayOfWeek) * (cellWidth + gap);
-                
-                monthLabel.style.left = `${position}px`;
-            }
+            const firstDayOfMonth = new Date(this.currentYear, month, 1);
+            const firstSunday = new Date(firstDayOfMonth);
+            firstSunday.setDate(firstDayOfMonth.getDate() - firstDayOfMonth.getDay());
+            
+            const daysFromStart = Math.floor((firstDayOfMonth - firstSunday) / (1000 * 60 * 60 * 24));
+            const position = daysFromStart * (cellWidth + gap);
+            
+            monthLabel.style.left = `${position}px`;
+            monthLabel.style.width = `${this.getMonthWidth(month) * (cellWidth + gap) - gap}px`;
             
             labelsContainer.appendChild(monthLabel);
-        });
+        }
         
         // Insert the labels container at the beginning of the graph
         graph.insertBefore(labelsContainer, graph.firstChild);
+    }
+    
+    getMonthWidth(month) {
+        const year = this.currentYear;
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        
+        // Get the first Sunday of the month (or before if month doesn't start on Sunday)
+        const firstSunday = new Date(firstDay);
+        firstSunday.setDate(firstDay.getDate() - firstDay.getDay());
+        
+        // Get the last Saturday of the month (or after if month doesn't end on Saturday)
+        const lastSaturday = new Date(lastDay);
+        lastSaturday.setDate(lastDay.getDate() + (6 - lastDay.getDay()));
+        
+        const daysDiff = Math.floor((lastSaturday - firstSunday) / (1000 * 60 * 60 * 24)) + 1;
+        return daysDiff;
     }
     
     navigateQuarter(direction) {

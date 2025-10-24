@@ -6,6 +6,7 @@
     <title>DauphinDash - Personal Progress Dashboard</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="gist-sync.js"></script>
 </head>
 <body>
     <div class="container">
@@ -81,6 +82,52 @@
                     </div>
                     <button id="save-button" class="save-btn">Save Progress</button>
                 </div>
+            </div>
+
+            <div class="sync-section">
+                <h2>GitHub Sync</h2>
+                <div id="sync-status" class="sync-status">
+                    <div id="sync-disconnected" class="sync-state">
+                        <p>💾 Data is currently saved locally only</p>
+                        <button id="setup-github-btn" class="github-btn">🔗 Connect GitHub for Cloud Sync</button>
+                    </div>
+                    <div id="sync-connected" class="sync-state" style="display: none;">
+                        <p>✅ Syncing to GitHub Gist</p>
+                        <a id="gist-link" href="#" target="_blank" class="gist-link">View your Gist →</a>
+                        <button id="disconnect-github-btn" class="github-btn-secondary">Disconnect</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GitHub Token Setup Modal -->
+    <div id="github-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Connect GitHub for Cloud Sync</h2>
+            <p>To sync your data across devices, you'll need a GitHub Personal Access Token.</p>
+            
+            <div class="setup-steps">
+                <h3>Setup Steps:</h3>
+                <ol>
+                    <li>Go to <a href="https://github.com/settings/tokens/new" target="_blank">GitHub Token Settings</a></li>
+                    <li>Click "Generate new token" → "Generate new token (classic)"</li>
+                    <li>Give it a name: "DauphinDash"</li>
+                    <li>Set expiration: "No expiration" (or your preference)</li>
+                    <li>Check ONLY the "<strong>gist</strong>" scope</li>
+                    <li>Click "Generate token" at the bottom</li>
+                    <li>Copy the token and paste it below</li>
+                </ol>
+            </div>
+
+            <div class="form-group">
+                <label for="github-token-input">GitHub Personal Access Token</label>
+                <input type="password" id="github-token-input" placeholder="ghp_xxxxxxxxxxxx">
+            </div>
+
+            <div class="modal-buttons">
+                <button id="save-token-btn" class="save-btn">Connect</button>
+                <button id="cancel-token-btn" class="cancel-btn">Cancel</button>
             </div>
         </div>
     </div>

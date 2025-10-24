@@ -3,13 +3,30 @@ class DauphinDash {
         this.data = this.loadData();
         this.currentQuarter = Math.floor(new Date().getMonth() / 3);
         this.currentYear = new Date().getFullYear();
+        this.gistSync = new GistSync();
         this.init();
     }
 
-    init() {
+    async init() {
         this.renderStats();
         this.renderContributionGraph();
         this.setupEventListeners();
+        await this.initGistSync();
+    }
+
+    async initGistSync() {
+        // Try to load data from Gist if authenticated
+        if (this.gistSync.isAuthenticated()) {
+            const gistData = await this.gistSync.loadFromGist();
+            if (gistData) {
+                // Merge Gist data with local data (Gist takes precedence)
+                this.data = { ...this.data, ...gistData };
+                this.saveData();
+                this.renderStats();
+                this.renderContributionGraph();
+                console.log('✅ Loaded data from GitHub Gist');
+            }
+        }
     }
 
     loadData() {
@@ -321,6 +338,122 @@ class DauphinDash {
         }
         
         this.updateQuarterDisplay();
+        
+        // GitHub sync event listeners
+        this.setupGitHubSyncListeners();
+    }
+
+    setupGitHubSyncListeners() {
+        // Update sync status UI
+        this.updateSyncStatusUI();
+
+        // Setup GitHub button
+        const setupBtn = document.getElementById('setup-github-btn');
+        if (setupBtn) {
+            setupBtn.addEventListener('click', () => this.showGitHubModal());
+        }
+
+        // Disconnect GitHub button
+        const disconnectBtn = document.getElementById('disconnect-github-btn');
+        if (disconnectBtn) {
+            disconnectBtn.addEventListener('click', () => this.disconnectGitHub());
+        }
+
+        // Modal buttons
+        const saveTokenBtn = document.getElementById('save-token-btn');
+        if (saveTokenBtn) {
+            saveTokenBtn.addEventListener('click', () => this.saveGitHubToken());
+        }
+
+        const cancelTokenBtn = document.getElementById('cancel-token-btn');
+        if (cancelTokenBtn) {
+            cancelTokenBtn.addEventListener('click', () => this.hideGitHubModal());
+        }
+
+        // Close modal on outside click
+        const modal = document.getElementById('github-modal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.hideGitHubModal();
+                }
+            });
+        }
+    }
+
+    updateSyncStatusUI() {
+        const isConnected = this.gistSync.isAuthenticated();
+        const disconnectedState = document.getElementById('sync-disconnected');
+        const connectedState = document.getElementById('sync-connected');
+        const gistLink = document.getElementById('gist-link');
+
+        if (isConnected) {
+            disconnectedState.style.display = 'none';
+            connectedState.style.display = 'block';
+            const gistUrl = this.gistSync.getGistUrl();
+            if (gistUrl && gistLink) {
+                gistLink.href = gistUrl;
+            }
+        } else {
+            disconnectedState.style.display = 'block';
+            connectedState.style.display = 'none';
+        }
+    }
+
+    showGitHubModal() {
+        const modal = document.getElementById('github-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+
+    hideGitHubModal() {
+        const modal = document.getElementById('github-modal');
+        const tokenInput = document.getElementById('github-token-input');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+        if (tokenInput) {
+            tokenInput.value = '';
+        }
+    }
+
+    async saveGitHubToken() {
+        const tokenInput = document.getElementById('github-token-input');
+        const token = tokenInput?.value.trim();
+
+        if (!token) {
+            alert('Please enter a GitHub token');
+            return;
+        }
+
+        // Set the token
+        this.gistSync.setAccessToken(token);
+
+        // Test the token
+        const isValid = await this.gistSync.testToken();
+        if (!isValid) {
+            alert('Invalid GitHub token. Please check your token and try again.');
+            this.gistSync.disconnect();
+            return;
+        }
+
+        // Sync current data to Gist
+        const synced = await this.gistSync.syncToGist(this.data);
+        if (synced) {
+            alert('✅ Connected to GitHub! Your data will now sync automatically.');
+            this.hideGitHubModal();
+            this.updateSyncStatusUI();
+        } else {
+            alert('Failed to sync data to GitHub. Please try again.');
+        }
+    }
+
+    async disconnectGitHub() {
+        if (confirm('Disconnect from GitHub? Your data will remain locally but won\'t sync anymore.')) {
+            this.gistSync.disconnect();
+            this.updateSyncStatusUI();
+        }
     }
 
     loadTodayData() {
@@ -339,7 +472,7 @@ class DauphinDash {
         }
     }
 
-    saveProgress() {
+    async saveProgress() {
         const today = this.getDateKey();
         const weightInput = document.getElementById('weight-input');
         const leetcodeInput = document.getElementById('leetcode-input');
@@ -361,13 +494,19 @@ class DauphinDash {
         };
         
         this.saveData();
+        
+        // Sync to Gist if authenticated
+        if (this.gistSync.isAuthenticated()) {
+            await this.gistSync.syncToGist(this.data);
+        }
+        
         this.renderStats();
         this.renderContributionGraph();
         
         // Show success feedback
         const saveButton = document.getElementById('save-button');
         const originalText = saveButton.textContent;
-        saveButton.textContent = 'Saved!';
+        saveButton.textContent = this.gistSync.isAuthenticated() ? 'Saved & Synced!' : 'Saved!';
         saveButton.style.background = 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)';
         
         setTimeout(() => {

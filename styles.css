@@ -588,3 +588,179 @@ body {
     .week-separator:nth-of-type(2) { left: 224px; } /* After week 2 (14 * 16px) */
     .week-separator:nth-of-type(3) { left: 336px; } /* After week 3 (21 * 16px) */
 }
+
+/* GitHub Sync Section */
+.sync-section {
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 30px;
+    border: 1px solid #e9ecef;
+    margin-top: 30px;
+}
+
+.sync-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: #2d3748;
+}
+
+.sync-status {
+    text-align: center;
+}
+
+.sync-state p {
+    margin-bottom: 15px;
+    color: #4a5568;
+    font-size: 1rem;
+}
+
+.github-btn {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.github-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(45, 55, 72, 0.3);
+}
+
+.github-btn-secondary {
+    background: #e2e8f0;
+    color: #4a5568;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 10px;
+}
+
+.github-btn-secondary:hover {
+    background: #cbd5e0;
+}
+
+.gist-link {
+    display: inline-block;
+    color: #4299e1;
+    text-decoration: none;
+    font-weight: 600;
+    margin: 10px 0;
+    transition: color 0.2s ease;
+}
+
+.gist-link:hover {
+    color: #3182ce;
+    text-decoration: underline;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h2 {
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    color: #2d3748;
+}
+
+.modal-content p {
+    margin-bottom: 20px;
+    color: #4a5568;
+    line-height: 1.6;
+}
+
+.setup-steps {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.setup-steps h3 {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    color: #2d3748;
+}
+
+.setup-steps ol {
+    margin-left: 20px;
+    color: #4a5568;
+    line-height: 1.8;
+}
+
+.setup-steps ol li {
+    margin-bottom: 10px;
+}
+
+.setup-steps a {
+    color: #4299e1;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.setup-steps a:hover {
+    text-decoration: underline;
+}
+
+.setup-steps strong {
+    color: #2d3748;
+    background: #e2e8f0;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+.modal-buttons button {
+    flex: 1;
+}
+
+.cancel-btn {
+    background: #e2e8f0;
+    color: #4a5568;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cancel-btn:hover {
+    background: #cbd5e0;
+}

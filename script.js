@@ -187,13 +187,6 @@ class DauphinDash {
         const saveButton = document.getElementById('save-button');
         saveButton.addEventListener('click', () => this.saveProgress());
         
-        // Auto-save on input change
-        const inputs = ['weight-input', 'leetcode-input', 'workout-checkbox'];
-        inputs.forEach(id => {
-            const element = document.getElementById(id);
-            element.addEventListener('change', () => this.loadTodayData());
-        });
-        
         // Load today's data on page load
         this.loadTodayData();
     }
@@ -201,9 +194,20 @@ class DauphinDash {
     loadTodayData() {
         const todayData = this.getTodayData();
         
-        document.getElementById('weight-input').value = todayData.weight || '';
-        document.getElementById('leetcode-input').value = todayData.leetcode || '';
-        document.getElementById('workout-checkbox').checked = todayData.workout || false;
+        // Only load data if fields are empty (don't overwrite user input)
+        const weightInput = document.getElementById('weight-input');
+        const leetcodeInput = document.getElementById('leetcode-input');
+        const workoutCheckbox = document.getElementById('workout-checkbox');
+        
+        if (!weightInput.value) {
+            weightInput.value = todayData.weight || '';
+        }
+        if (!leetcodeInput.value) {
+            leetcodeInput.value = todayData.leetcode || '';
+        }
+        if (!workoutCheckbox.checked && todayData.workout) {
+            workoutCheckbox.checked = todayData.workout;
+        }
     }
 
     saveProgress() {

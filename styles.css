@@ -82,10 +82,53 @@ body {
     margin-bottom: 40px;
 }
 
+.graph-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
 .contribution-graph h2 {
     font-size: 1.8rem;
-    margin-bottom: 20px;
     color: #2d3748;
+    margin: 0;
+}
+
+.month-navigation {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.nav-btn {
+    background: #f7fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: #4a5568;
+    transition: all 0.2s ease;
+}
+
+.nav-btn:hover {
+    background: #edf2f7;
+    border-color: #cbd5e0;
+    transform: translateY(-1px);
+}
+
+.month-display {
+    font-weight: 600;
+    color: #2d3748;
+    min-width: 150px;
+    text-align: center;
 }
 
 .graph-container {
@@ -137,35 +180,70 @@ body {
 }
 
 .day-cell {
-    width: 12px;
-    height: 12px;
-    border-radius: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
     background: #ebedf0;
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .day-cell:hover {
-    transform: scale(1.2);
+    transform: scale(1.3);
     z-index: 10;
 }
 
-.day-cell.weight {
+.split-dot-inner {
+    width: 12px;
+    height: 12px;
+    position: relative;
+    border-radius: 50%;
+    background: #ebedf0;
+    overflow: hidden;
+}
+
+.dot-third {
+    position: absolute;
+    width: 50%;
+    height: 50%;
+    transition: all 0.2s ease;
+}
+
+.weight-third {
+    top: 0;
+    left: 0;
+    background: #ebedf0;
+    border-radius: 50% 0 0 0;
+}
+
+.leetcode-third {
+    bottom: 0;
+    left: 0;
+    background: #ebedf0;
+    border-radius: 0 0 0 50%;
+}
+
+.workout-third {
+    bottom: 0;
+    right: 0;
+    background: #ebedf0;
+    border-radius: 0 0 50% 0;
+}
+
+.dot-third.active.weight-third {
     background: #4299e1;
 }
 
-.day-cell.leetcode {
+.dot-third.active.leetcode-third {
     background: #48bb78;
 }
 
-.day-cell.workout {
+.dot-third.active.workout-third {
     background: #ed8936;
-}
-
-.day-cell.multiple {
-    background: linear-gradient(45deg, #4299e1 25%, #48bb78 25%, #48bb78 50%, #ed8936 50%, #ed8936 75%, #4299e1 75%);
-    background-size: 8px 8px;
 }
 
 .edit-section {

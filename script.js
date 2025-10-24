@@ -1,6 +1,8 @@
 class DauphinDash {
     constructor() {
         this.data = this.loadData();
+        this.currentMonth = new Date().getMonth();
+        this.currentYear = new Date().getFullYear();
         this.init();
     }
 
@@ -104,12 +106,12 @@ class DauphinDash {
         const graph = document.getElementById('contribution-graph');
         graph.innerHTML = '';
 
-        // Generate last 365 days
-        const today = new Date();
-        const days = [];
+        // Generate current month days
+        const daysInMonth = new Date(this.currentYear, this.currentMonth + 1, 0).getDate();
         
-        for (let i = 364; i >= 0; i--) {
-            const date = new Date(today.getTime() - i * 86400000);
+        const days = [];
+        for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(this.currentYear, this.currentMonth, day);
             const dateKey = this.getDateKey(date);
             const dayData = this.data[dateKey] || {};
             
@@ -120,7 +122,7 @@ class DauphinDash {
             });
         }
 
-        // Create grid
+        // Create grid (7 columns for days of week)
         const weeks = [];
         for (let i = 0; i < days.length; i += 7) {
             weeks.push(days.slice(i, i + 7));
@@ -129,23 +131,37 @@ class DauphinDash {
         weeks.forEach(week => {
             week.forEach(day => {
                 const cell = document.createElement('div');
-                cell.className = 'day-cell';
+                cell.className = 'day-cell split-dot';
                 cell.dataset.date = day.dateKey;
                 
-                // Determine cell class based on data
+                // Create split dot with thirds
                 const hasWeight = day.data.weight !== null && day.data.weight !== undefined;
                 const hasLeetcode = day.data.leetcode > 0;
                 const hasWorkout = day.data.workout === true;
                 
-                if (hasWeight && hasLeetcode && hasWorkout) {
-                    cell.classList.add('multiple');
-                } else if (hasWeight) {
-                    cell.classList.add('weight');
-                } else if (hasLeetcode) {
-                    cell.classList.add('leetcode');
-                } else if (hasWorkout) {
-                    cell.classList.add('workout');
-                }
+                // Create the split dot visual
+                const dot = document.createElement('div');
+                dot.className = 'split-dot-inner';
+                
+                // Weight third (top)
+                const weightThird = document.createElement('div');
+                weightThird.className = 'dot-third weight-third';
+                if (hasWeight) weightThird.classList.add('active');
+                
+                // LeetCode third (bottom-left)
+                const leetcodeThird = document.createElement('div');
+                leetcodeThird.className = 'dot-third leetcode-third';
+                if (hasLeetcode) leetcodeThird.classList.add('active');
+                
+                // Workout third (bottom-right)
+                const workoutThird = document.createElement('div');
+                workoutThird.className = 'dot-third workout-third';
+                if (hasWorkout) workoutThird.classList.add('active');
+                
+                dot.appendChild(weightThird);
+                dot.appendChild(leetcodeThird);
+                dot.appendChild(workoutThird);
+                cell.appendChild(dot);
 
                 // Add tooltip
                 const tooltip = this.createTooltip(day);
@@ -214,6 +230,20 @@ class DauphinDash {
                 }
             });
         }
+        
+        // Month navigation
+        const prevMonthBtn = document.getElementById('prev-month');
+        const nextMonthBtn = document.getElementById('next-month');
+        
+        if (prevMonthBtn) {
+            prevMonthBtn.addEventListener('click', () => this.navigateMonth(-1));
+        }
+        
+        if (nextMonthBtn) {
+            nextMonthBtn.addEventListener('click', () => this.navigateMonth(1));
+        }
+        
+        this.updateMonthDisplay();
     }
 
     loadTodayData() {
@@ -267,6 +297,33 @@ class DauphinDash {
             saveButton.textContent = originalText;
             saveButton.style.background = 'linear-gradient(135deg, #4299e1 0%, #3182ce 100%)';
         }, 2000);
+    }
+    
+    navigateMonth(direction) {
+        this.currentMonth += direction;
+        
+        if (this.currentMonth < 0) {
+            this.currentMonth = 11;
+            this.currentYear--;
+        } else if (this.currentMonth > 11) {
+            this.currentMonth = 0;
+            this.currentYear++;
+        }
+        
+        this.updateMonthDisplay();
+        this.renderContributionGraph();
+    }
+    
+    updateMonthDisplay() {
+        const monthNames = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        
+        const monthDisplay = document.getElementById('current-month');
+        if (monthDisplay) {
+            monthDisplay.textContent = `${monthNames[this.currentMonth]} ${this.currentYear}`;
+        }
     }
 }
 

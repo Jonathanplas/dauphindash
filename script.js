@@ -201,6 +201,19 @@ class DauphinDash {
         console.log('Weight input:', document.getElementById('weight-input'));
         console.log('LeetCode input:', document.getElementById('leetcode-input'));
         console.log('Workout checkbox:', document.getElementById('workout-checkbox'));
+        
+        // Add click listener to custom checkbox label
+        const checkboxLabel = document.querySelector('.checkbox-label');
+        if (checkboxLabel) {
+            checkboxLabel.addEventListener('click', (e) => {
+                e.preventDefault();
+                const checkbox = document.getElementById('workout-checkbox');
+                if (checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                    console.log('Checkbox toggled:', checkbox.checked);
+                }
+            });
+        }
     }
 
     loadTodayData() {
@@ -209,7 +222,14 @@ class DauphinDash {
         // Load today's data into the form
         document.getElementById('weight-input').value = todayData.weight || '';
         document.getElementById('leetcode-input').value = todayData.leetcode || '';
-        document.getElementById('workout-checkbox').checked = todayData.workout || false;
+        
+        // Handle custom checkbox
+        const workoutCheckbox = document.getElementById('workout-checkbox');
+        if (workoutCheckbox) {
+            workoutCheckbox.checked = todayData.workout || false;
+            // Trigger change event to update visual state
+            workoutCheckbox.dispatchEvent(new Event('change'));
+        }
     }
 
     saveProgress() {

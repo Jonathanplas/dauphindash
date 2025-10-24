@@ -194,14 +194,14 @@ body {
 }
 
 .day-label {
-    height: 20px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.75rem;
     color: #718096;
     font-weight: 600;
-    width: 20px;
+    width: 24px;
 }
 
 .horizontal-month-labels-container {
@@ -209,12 +209,14 @@ body {
     margin-bottom: 15px;
     height: 30px;
     width: 100%;
-    gap: 16px;
+    gap: 22px;
     align-items: center;
+    justify-content: center;
 }
 
 .horizontal-month-label {
-    flex: 1;
+    width: 196px;
+    flex-shrink: 0;
     font-size: 0.9rem;
     color: #4a5568;
     font-weight: 600;
@@ -231,21 +233,19 @@ body {
 
 .quarter-container {
     display: flex;
-    gap: 16px;
+    gap: 20px;
     width: 100%;
     align-items: flex-start;
-    justify-content: space-between;
+    justify-content: center;
 }
 
 .month-block {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(7, 24px);
     gap: 4px;
-    flex: 1;
     position: relative;
-    grid-auto-rows: minmax(20px, auto);
-    min-width: 0;
-    align-content: start;
+    grid-auto-rows: 24px;
+    flex-shrink: 0;
 }
 
 .month-separator {
@@ -280,10 +280,8 @@ body {
 .week-separator:nth-of-type(3) { left: 504px; } /* After week 3 (21 * 24px) */
 
 .day-cell {
-    width: 100%;
-    aspect-ratio: 1;
-    min-width: 16px;
-    min-height: 16px;
+    width: 24px;
+    height: 24px;
     border-radius: 4px;
     background: #ebedf0;
     cursor: pointer;
@@ -300,8 +298,8 @@ body {
 }
 
 .split-dot-inner {
-    width: 90%;
-    height: 90%;
+    width: 20px;
+    height: 20px;
     position: relative;
     border-radius: 50%;
     background: #ebedf0;
@@ -547,9 +545,9 @@ body {
     }
     
     .month-block {
-        grid-template-columns: repeat(7, 1fr);
+        grid-template-columns: repeat(7, 18px);
         gap: 3px;
-        grid-auto-rows: minmax(16px, auto);
+        grid-auto-rows: 18px;
     }
     
     .month-separator {
@@ -557,18 +555,33 @@ body {
     }
     
     .day-label {
-        height: 16px;
-        width: 16px;
+        height: 18px;
+        width: 18px;
         font-size: 0.65rem;
     }
     
+    .day-cell {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .split-dot-inner {
+        width: 15px;
+        height: 15px;
+    }
+    
     .horizontal-month-label {
+        width: 147px;
         font-size: 0.75rem;
         padding: 2px 4px;
     }
     
     .quarter-container {
-        gap: 8px;
+        gap: 16px;
+    }
+    
+    .horizontal-month-labels-container {
+        gap: 17px;
     }
     
     .week-separator:nth-of-type(1) { left: 112px; } /* After week 1 (7 * 16px) */

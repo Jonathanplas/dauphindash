@@ -197,6 +197,13 @@ class DauphinDash {
                 graph.appendChild(cell);
             });
         });
+        
+        // Add week separators
+        for (let i = 1; i < weeks.length; i++) {
+            const separator = document.createElement('div');
+            separator.className = 'week-separator';
+            graph.appendChild(separator);
+        }
     }
 
     createTooltip(day) {

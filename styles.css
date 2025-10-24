@@ -175,18 +175,19 @@ body {
 
 .graph-wrapper {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     align-items: flex-start;
     width: 100%;
     overflow-x: auto;
+    padding: 10px 0;
 }
 
 .day-labels {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    margin-top: 20px;
     flex-shrink: 0;
+    margin-top: 0;
 }
 
 .day-label {
@@ -202,11 +203,25 @@ body {
 
 .graph {
     display: grid;
-    grid-template-columns: repeat(7, 16px);
-    gap: 2px;
+    grid-template-columns: repeat(7, 18px);
+    gap: 3px;
     flex-shrink: 0;
     width: fit-content;
+    position: relative;
 }
+
+.week-separator {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: #e2e8f0;
+    z-index: 1;
+}
+
+.week-separator:nth-of-type(1) { left: 126px; } /* After week 1 (7 * 18px) */
+.week-separator:nth-of-type(2) { left: 252px; } /* After week 2 (14 * 18px) */
+.week-separator:nth-of-type(3) { left: 378px; } /* After week 3 (21 * 18px) */
 
 .day-cell {
     width: 16px;
@@ -433,26 +448,32 @@ body {
     }
     
     .graph {
-        grid-template-columns: repeat(7, 12px);
+        grid-template-columns: repeat(7, 14px);
+        gap: 2px;
     }
     
     .day-cell {
-        width: 12px;
-        height: 12px;
+        width: 14px;
+        height: 14px;
     }
     
     .split-dot-inner {
-        width: 10px;
-        height: 10px;
+        width: 12px;
+        height: 12px;
     }
     
     .day-label {
-        width: 12px;
-        height: 12px;
+        width: 14px;
+        height: 14px;
         font-size: 0.6rem;
     }
     
     .graph-wrapper {
         gap: 5px;
+        padding: 5px 0;
     }
+    
+    .week-separator:nth-of-type(1) { left: 98px; } /* After week 1 (7 * 14px) */
+    .week-separator:nth-of-type(2) { left: 196px; } /* After week 2 (14 * 14px) */
+    .week-separator:nth-of-type(3) { left: 294px; } /* After week 3 (21 * 14px) */
 }

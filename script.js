@@ -156,6 +156,22 @@ class DauphinDash {
         // Add month labels above each month
         this.addHorizontalMonthLabels(graph, months);
 
+        // Create the graph wrapper that contains day labels and quarter container
+        const graphWrapper = document.createElement('div');
+        graphWrapper.className = 'graph-wrapper';
+        
+        // Add day labels
+        const dayLabelsContainer = document.createElement('div');
+        dayLabelsContainer.className = 'day-labels';
+        const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+        dayLabels.forEach(label => {
+            const dayLabel = document.createElement('div');
+            dayLabel.className = 'day-label';
+            dayLabel.textContent = label;
+            dayLabelsContainer.appendChild(dayLabel);
+        });
+        graphWrapper.appendChild(dayLabelsContainer);
+
         // Create the horizontal layout with three month blocks
         const quarterContainer = document.createElement('div');
         quarterContainer.className = 'quarter-container';
@@ -237,7 +253,8 @@ class DauphinDash {
             }
         });
         
-        graph.appendChild(quarterContainer);
+        graphWrapper.appendChild(quarterContainer);
+        graph.appendChild(graphWrapper);
     }
 
     createTooltip(day) {

@@ -353,20 +353,34 @@ class DauphinDash {
             'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
         ];
         
-        const quarterNames = ['Q1', 'Q2', 'Q3', 'Q4'];
-        
         // Create month labels container
         const labelsContainer = document.createElement('div');
         labelsContainer.className = 'month-labels-container';
+        
+        const cellWidth = 20; // Same as .day-cell width
+        const gap = 4; // Same as grid gap
         
         months.forEach((monthData, index) => {
             const monthLabel = document.createElement('div');
             monthLabel.className = 'month-label';
             monthLabel.textContent = monthNames[monthData.month];
+            
+            // Calculate position based on the first day of the month
+            const firstDayOfMonth = monthData.days.find(day => day.isCurrentMonth);
+            if (firstDayOfMonth) {
+                const dayOfWeek = firstDayOfMonth.date.getDay();
+                const dayOfMonth = firstDayOfMonth.date.getDate();
+                const weekNumber = Math.floor((dayOfMonth - 1) / 7);
+                const position = (weekNumber * 7 + dayOfWeek) * (cellWidth + gap);
+                
+                monthLabel.style.left = `${position}px`;
+            }
+            
             labelsContainer.appendChild(monthLabel);
         });
         
-        graph.appendChild(labelsContainer);
+        // Insert the labels container at the beginning of the graph
+        graph.insertBefore(labelsContainer, graph.firstChild);
     }
     
     navigateQuarter(direction) {

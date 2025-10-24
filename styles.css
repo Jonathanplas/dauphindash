@@ -181,7 +181,7 @@ body {
     width: 100%;
     overflow-x: auto;
     padding: 10px 0;
-    min-width: 2400px;
+    min-width: 800px;
 }
 
 .day-labels {
@@ -203,26 +203,48 @@ body {
     font-weight: 500;
 }
 
-.quarter-month-labels-container {
-    position: relative;
+.horizontal-month-labels-container {
+    display: flex;
     margin-bottom: 15px;
     height: 25px;
     width: 100%;
 }
 
-.quarter-month-label {
-    position: absolute;
+.horizontal-month-label {
+    flex: 1;
     font-size: 0.8rem;
     color: #4a5568;
     font-weight: 600;
     text-align: center;
-    top: 0;
     background: rgba(255, 255, 255, 0.9);
     padding: 2px 6px;
     border-radius: 4px;
     border: 1px solid #e2e8f0;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    z-index: 10;
+    margin: 0 2px;
+}
+
+.quarter-container {
+    display: flex;
+    gap: 0;
+    width: 100%;
+    align-items: flex-start;
+}
+
+.month-block {
+    display: grid;
+    grid-template-columns: repeat(7, 20px);
+    gap: 4px;
+    flex: 1;
+    position: relative;
+    grid-auto-rows: 20px;
+}
+
+.month-separator {
+    width: 1px;
+    background: #e2e8f0;
+    margin: 0 8px;
+    min-height: 100px;
 }
 
 .graph {
@@ -511,7 +533,16 @@ body {
     .graph-wrapper {
         gap: 5px;
         padding: 5px 0;
-        min-width: 1800px;
+        min-width: 600px;
+    }
+    
+    .month-block {
+        grid-template-columns: repeat(7, 16px);
+        gap: 3px;
+    }
+    
+    .month-separator {
+        margin: 0 4px;
     }
     
     .week-separator:nth-of-type(1) { left: 112px; } /* After week 1 (7 * 16px) */

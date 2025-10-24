@@ -106,117 +106,138 @@ class DauphinDash {
         const graph = document.getElementById('contribution-graph');
         graph.innerHTML = '';
 
-        // Generate the entire quarter as one continuous calendar
+        // Generate three months for the quarter
         const quarterStartMonth = this.currentQuarter * 3;
-        const quarterEndMonth = quarterStartMonth + 2;
+        const months = [];
         
-        // Get the first day of the quarter (first day of first month)
-        const firstDayOfQuarter = new Date(this.currentYear, quarterStartMonth, 1);
-        
-        // Get the last day of the quarter (last day of last month)
-        const lastDayOfQuarter = new Date(this.currentYear, quarterEndMonth + 1, 0);
-        
-        // Get the first Sunday of the quarter (or before if quarter doesn't start on Sunday)
-        const firstSunday = new Date(firstDayOfQuarter);
-        firstSunday.setDate(firstDayOfQuarter.getDate() - firstDayOfQuarter.getDay());
-        
-        // Get the last Saturday of the quarter (or after if quarter doesn't end on Saturday)
-        const lastSaturday = new Date(lastDayOfQuarter);
-        lastSaturday.setDate(lastDayOfQuarter.getDate() + (6 - lastDayOfQuarter.getDay()));
-        
-        // Create all days from first Sunday to last Saturday
-        const allDays = [];
-        const currentDate = new Date(firstSunday);
-        
-        while (currentDate <= lastSaturday) {
-            const dateKey = this.getDateKey(currentDate);
-            const dayData = this.data[dateKey] || {};
-            const dayMonth = currentDate.getMonth();
-            const dayYear = currentDate.getFullYear();
+        for (let monthOffset = 0; monthOffset < 3; monthOffset++) {
+            const month = quarterStartMonth + monthOffset;
+            const year = this.currentYear;
             
-            allDays.push({
-                date: new Date(currentDate),
-                dateKey: dateKey,
-                data: dayData,
-                isCurrentQuarter: dayMonth >= quarterStartMonth && dayMonth <= quarterEndMonth && dayYear === this.currentYear,
-                month: dayMonth,
-                year: dayYear
-            });
+            // Get the first day of the month
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
             
-            currentDate.setDate(currentDate.getDate() + 1);
-        }
-
-        // Create grid (7 columns for days of week)
-        const weeks = [];
-        for (let i = 0; i < allDays.length; i += 7) {
-            weeks.push(allDays.slice(i, i + 7));
-        }
-
-        // Add quarter month labels
-        this.addQuarterMonthLabels(graph, quarterStartMonth, quarterEndMonth);
-
-        weeks.forEach((week, weekIndex) => {
-            week.forEach(day => {
-                const cell = document.createElement('div');
-                cell.className = 'day-cell split-dot';
-                cell.dataset.date = day.dateKey;
+            // Get the first Sunday of the month (or before if month doesn't start on Sunday)
+            const firstSunday = new Date(firstDay);
+            firstSunday.setDate(firstDay.getDate() - firstDay.getDay());
+            
+            // Get the last Saturday of the month (or after if month doesn't end on Saturday)
+            const lastSaturday = new Date(lastDay);
+            lastSaturday.setDate(lastDay.getDate() + (6 - lastDay.getDay()));
+            
+            // Create all days from first Sunday to last Saturday
+            const allDays = [];
+            const currentDate = new Date(firstSunday);
+            
+            while (currentDate <= lastSaturday) {
+                const dateKey = this.getDateKey(currentDate);
+                const dayData = this.data[dateKey] || {};
                 
-                // Fade out days not in current quarter
-                if (!day.isCurrentQuarter) {
-                    cell.classList.add('other-quarter');
-                }
-                
-                // Create split dot with thirds
-                const hasWeight = day.data.weight !== null && day.data.weight !== undefined;
-                const hasLeetcode = day.data.leetcode > 0;
-                const hasWorkout = day.data.workout === true;
-                
-                // Create the split dot visual
-                const dot = document.createElement('div');
-                dot.className = 'split-dot-inner';
-                
-                // Weight third (top)
-                const weightThird = document.createElement('div');
-                weightThird.className = 'dot-third weight-third';
-                if (hasWeight) weightThird.classList.add('active');
-                
-                // LeetCode third (bottom-left)
-                const leetcodeThird = document.createElement('div');
-                leetcodeThird.className = 'dot-third leetcode-third';
-                if (hasLeetcode) leetcodeThird.classList.add('active');
-                
-                // Workout third (bottom-right)
-                const workoutThird = document.createElement('div');
-                workoutThird.className = 'dot-third workout-third';
-                if (hasWorkout) workoutThird.classList.add('active');
-                
-                dot.appendChild(weightThird);
-                dot.appendChild(leetcodeThird);
-                dot.appendChild(workoutThird);
-                cell.appendChild(dot);
-
-                // Add tooltip
-                const tooltip = this.createTooltip(day);
-                cell.appendChild(tooltip);
-                
-                cell.addEventListener('mouseenter', () => {
-                    tooltip.classList.add('show');
+                allDays.push({
+                    date: new Date(currentDate),
+                    dateKey: dateKey,
+                    data: dayData,
+                    isCurrentMonth: currentDate.getMonth() === month,
+                    month: month,
+                    year: year
                 });
                 
-                cell.addEventListener('mouseleave', () => {
-                    tooltip.classList.remove('show');
-                });
-
-                graph.appendChild(cell);
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            
+            months.push({
+                month: month,
+                year: year,
+                days: allDays
             });
+        }
+
+        // Add month labels above each month
+        this.addHorizontalMonthLabels(graph, months);
+
+        // Create the horizontal layout with three month blocks
+        const quarterContainer = document.createElement('div');
+        quarterContainer.className = 'quarter-container';
+        
+        months.forEach((monthData, monthIndex) => {
+            // Create month block
+            const monthBlock = document.createElement('div');
+            monthBlock.className = 'month-block';
+            
+            // Create grid for this month (7 columns for days of week)
+            const weeks = [];
+            for (let i = 0; i < monthData.days.length; i += 7) {
+                weeks.push(monthData.days.slice(i, i + 7));
+            }
+            
+            weeks.forEach((week, weekIndex) => {
+                week.forEach(day => {
+                    const cell = document.createElement('div');
+                    cell.className = 'day-cell split-dot';
+                    cell.dataset.date = day.dateKey;
+                    
+                    // Fade out days not in current month
+                    if (!day.isCurrentMonth) {
+                        cell.classList.add('other-month');
+                    }
+                    
+                    // Create split dot with thirds
+                    const hasWeight = day.data.weight !== null && day.data.weight !== undefined;
+                    const hasLeetcode = day.data.leetcode > 0;
+                    const hasWorkout = day.data.workout === true;
+                    
+                    // Create the split dot visual
+                    const dot = document.createElement('div');
+                    dot.className = 'split-dot-inner';
+                    
+                    // Weight third (top)
+                    const weightThird = document.createElement('div');
+                    weightThird.className = 'dot-third weight-third';
+                    if (hasWeight) weightThird.classList.add('active');
+                    
+                    // LeetCode third (bottom-left)
+                    const leetcodeThird = document.createElement('div');
+                    leetcodeThird.className = 'dot-third leetcode-third';
+                    if (hasLeetcode) leetcodeThird.classList.add('active');
+                    
+                    // Workout third (bottom-right)
+                    const workoutThird = document.createElement('div');
+                    workoutThird.className = 'dot-third workout-third';
+                    if (hasWorkout) workoutThird.classList.add('active');
+                    
+                    dot.appendChild(weightThird);
+                    dot.appendChild(leetcodeThird);
+                    dot.appendChild(workoutThird);
+                    cell.appendChild(dot);
+
+                    // Add tooltip
+                    const tooltip = this.createTooltip(day);
+                    cell.appendChild(tooltip);
+                    
+                    cell.addEventListener('mouseenter', () => {
+                        tooltip.classList.add('show');
+                    });
+                    
+                    cell.addEventListener('mouseleave', () => {
+                        tooltip.classList.remove('show');
+                    });
+
+                    monthBlock.appendChild(cell);
+                });
+            });
+            
+            quarterContainer.appendChild(monthBlock);
+            
+            // Add separator between months (except after the last month)
+            if (monthIndex < months.length - 1) {
+                const separator = document.createElement('div');
+                separator.className = 'month-separator';
+                quarterContainer.appendChild(separator);
+            }
         });
         
-        // Add week separators
-        for (let i = 1; i < weeks.length; i++) {
-            const separator = document.createElement('div');
-            separator.className = 'week-separator';
-            graph.appendChild(separator);
-        }
+        graph.appendChild(quarterContainer);
     }
 
     createTooltip(day) {
@@ -338,7 +359,7 @@ class DauphinDash {
         }, 2000);
     }
     
-    addQuarterMonthLabels(graph, quarterStartMonth, quarterEndMonth) {
+    addHorizontalMonthLabels(graph, months) {
         const monthNames = [
             'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
             'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
@@ -346,50 +367,17 @@ class DauphinDash {
         
         // Create month labels container
         const labelsContainer = document.createElement('div');
-        labelsContainer.className = 'quarter-month-labels-container';
+        labelsContainer.className = 'horizontal-month-labels-container';
         
-        const cellWidth = 20; // Same as .day-cell width
-        const gap = 4; // Same as grid gap
-        
-        // Create labels for each month in the quarter
-        for (let month = quarterStartMonth; month <= quarterEndMonth; month++) {
+        months.forEach((monthData, index) => {
             const monthLabel = document.createElement('div');
-            monthLabel.className = 'quarter-month-label';
-            monthLabel.textContent = monthNames[month];
-            
-            // Calculate position based on the first day of the month
-            const firstDayOfMonth = new Date(this.currentYear, month, 1);
-            const firstSunday = new Date(firstDayOfMonth);
-            firstSunday.setDate(firstDayOfMonth.getDate() - firstDayOfMonth.getDay());
-            
-            const daysFromStart = Math.floor((firstDayOfMonth - firstSunday) / (1000 * 60 * 60 * 24));
-            const position = daysFromStart * (cellWidth + gap);
-            
-            monthLabel.style.left = `${position}px`;
-            monthLabel.style.width = `${this.getMonthWidth(month) * (cellWidth + gap) - gap}px`;
-            
+            monthLabel.className = 'horizontal-month-label';
+            monthLabel.textContent = monthNames[monthData.month];
             labelsContainer.appendChild(monthLabel);
-        }
+        });
         
         // Insert the labels container at the beginning of the graph
         graph.insertBefore(labelsContainer, graph.firstChild);
-    }
-    
-    getMonthWidth(month) {
-        const year = this.currentYear;
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        
-        // Get the first Sunday of the month (or before if month doesn't start on Sunday)
-        const firstSunday = new Date(firstDay);
-        firstSunday.setDate(firstDay.getDate() - firstDay.getDay());
-        
-        // Get the last Saturday of the month (or after if month doesn't end on Saturday)
-        const lastSaturday = new Date(lastDay);
-        lastSaturday.setDate(lastDay.getDate() + (6 - lastDay.getDay()));
-        
-        const daysDiff = Math.floor((lastSaturday - firstSunday) / (1000 * 60 * 60 * 24)) + 1;
-        return daysDiff;
     }
     
     navigateQuarter(direction) {

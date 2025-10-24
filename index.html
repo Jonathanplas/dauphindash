@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DauphinDash - Personal Progress Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>DauphinDash</h1>
+            <p>Track your daily progress</p>
+        </header>
+
+        <div class="dashboard">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Weight</h3>
+                    <div class="stat-value" id="current-weight">--</div>
+                    <div class="stat-change" id="weight-change">--</div>
+                </div>
+                <div class="stat-card">
+                    <h3>LeetCode</h3>
+                    <div class="stat-value" id="leetcode-total">0</div>
+                    <div class="stat-change" id="leetcode-this-week">0 this week</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Workouts</h3>
+                    <div class="stat-value" id="workout-streak">0</div>
+                    <div class="stat-change" id="workout-this-week">0 this week</div>
+                </div>
+            </div>
+
+            <div class="contribution-graph">
+                <h2>Progress Overview</h2>
+                <div class="graph-container">
+                    <div class="graph-legend">
+                        <div class="legend-item">
+                            <span class="legend-color weight"></span>
+                            <span>Weight tracked</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color leetcode"></span>
+                            <span>LeetCode solved</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color workout"></span>
+                            <span>Workout completed</span>
+                        </div>
+                    </div>
+                    <div class="graph" id="contribution-graph"></div>
+                </div>
+            </div>
+
+            <div class="edit-section">
+                <h2>Add Today's Progress</h2>
+                <div class="edit-form">
+                    <div class="form-group">
+                        <label for="weight-input">Weight (lbs)</label>
+                        <input type="number" id="weight-input" step="0.1" placeholder="Enter weight">
+                    </div>
+                    <div class="form-group">
+                        <label for="leetcode-input">LeetCode Problems Solved</label>
+                        <input type="number" id="leetcode-input" min="0" placeholder="Number of problems">
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="workout-checkbox">
+                            <span class="checkmark"></span>
+                            Worked out today
+                        </label>
+                    </div>
+                    <button id="save-button" class="save-btn">Save Progress</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

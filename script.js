@@ -1,7 +1,7 @@
 class DauphinDash {
     constructor() {
         this.data = this.loadData();
-        this.currentMonth = new Date().getMonth();
+        this.currentQuarter = Math.floor(new Date().getMonth() / 3);
         this.currentYear = new Date().getFullYear();
         this.init();
     }
@@ -106,41 +106,58 @@ class DauphinDash {
         const graph = document.getElementById('contribution-graph');
         graph.innerHTML = '';
 
-        // Generate exactly one month with proper week structure
-        const firstDay = new Date(this.currentYear, this.currentMonth, 1);
-        const lastDay = new Date(this.currentYear, this.currentMonth + 1, 0);
-        
-        // Get the first Sunday of the month (or before if month doesn't start on Sunday)
-        const firstSunday = new Date(firstDay);
-        firstSunday.setDate(firstDay.getDate() - firstDay.getDay());
-        
-        // Get the last Saturday of the month (or after if month doesn't end on Saturday)
-        const lastSaturday = new Date(lastDay);
-        lastSaturday.setDate(lastDay.getDate() + (6 - lastDay.getDay()));
-        
-        // Create all days from first Sunday to last Saturday
-        const allDays = [];
-        const currentDate = new Date(firstSunday);
-        
-        while (currentDate <= lastSaturday) {
-            const dateKey = this.getDateKey(currentDate);
-            const dayData = this.data[dateKey] || {};
+        // Generate 3 months for the quarter
+        const months = [];
+        for (let monthOffset = 0; monthOffset < 3; monthOffset++) {
+            const month = (this.currentQuarter * 3) + monthOffset;
+            const year = this.currentYear;
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
             
-            allDays.push({
-                date: new Date(currentDate),
-                dateKey: dateKey,
-                data: dayData,
-                isCurrentMonth: currentDate.getMonth() === this.currentMonth
+            // Get the first Sunday of the month (or before if month doesn't start on Sunday)
+            const firstSunday = new Date(firstDay);
+            firstSunday.setDate(firstDay.getDate() - firstDay.getDay());
+            
+            // Get the last Saturday of the month (or after if month doesn't end on Saturday)
+            const lastSaturday = new Date(lastDay);
+            lastSaturday.setDate(lastDay.getDate() + (6 - lastDay.getDay()));
+            
+            // Create all days from first Sunday to last Saturday
+            const allDays = [];
+            const currentDate = new Date(firstSunday);
+            
+            while (currentDate <= lastSaturday) {
+                const dateKey = this.getDateKey(currentDate);
+                const dayData = this.data[dateKey] || {};
+                
+                allDays.push({
+                    date: new Date(currentDate),
+                    dateKey: dateKey,
+                    data: dayData,
+                    isCurrentMonth: currentDate.getMonth() === month,
+                    month: month,
+                    year: year
+                });
+                
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            
+            months.push({
+                month: month,
+                year: year,
+                days: allDays
             });
-            
-            currentDate.setDate(currentDate.getDate() + 1);
         }
 
         // Create grid (7 columns for days of week)
+        const allDays = months.flatMap(m => m.days);
         const weeks = [];
         for (let i = 0; i < allDays.length; i += 7) {
             weeks.push(allDays.slice(i, i + 7));
         }
+
+        // Add month labels with bracket lines
+        this.addMonthLabels(graph, months);
 
         weeks.forEach((week, weekIndex) => {
             week.forEach(day => {
@@ -148,8 +165,13 @@ class DauphinDash {
                 cell.className = 'day-cell split-dot';
                 cell.dataset.date = day.dateKey;
                 
-                // Fade out days not in current month
-                if (!day.isCurrentMonth) {
+                // Fade out days not in current quarter
+                const currentMonth = new Date().getMonth();
+                const currentQuarter = Math.floor(currentMonth / 3);
+                const dayQuarter = Math.floor(day.month / 3);
+                if (dayQuarter !== currentQuarter) {
+                    cell.classList.add('other-quarter');
+                } else if (!day.isCurrentMonth) {
                     cell.classList.add('other-month');
                 }
                 
@@ -257,19 +279,19 @@ class DauphinDash {
             });
         }
         
-        // Month navigation
+        // Quarter navigation
         const prevMonthBtn = document.getElementById('prev-month');
         const nextMonthBtn = document.getElementById('next-month');
         
         if (prevMonthBtn) {
-            prevMonthBtn.addEventListener('click', () => this.navigateMonth(-1));
+            prevMonthBtn.addEventListener('click', () => this.navigateQuarter(-1));
         }
         
         if (nextMonthBtn) {
-            nextMonthBtn.addEventListener('click', () => this.navigateMonth(1));
+            nextMonthBtn.addEventListener('click', () => this.navigateQuarter(1));
         }
         
-        this.updateMonthDisplay();
+        this.updateQuarterDisplay();
     }
 
     loadTodayData() {
@@ -325,30 +347,52 @@ class DauphinDash {
         }, 2000);
     }
     
-    navigateMonth(direction) {
-        this.currentMonth += direction;
+    addMonthLabels(graph, months) {
+        const monthNames = [
+            'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        ];
         
-        if (this.currentMonth < 0) {
-            this.currentMonth = 11;
+        const quarterNames = ['Q1', 'Q2', 'Q3', 'Q4'];
+        
+        // Create month labels container
+        const labelsContainer = document.createElement('div');
+        labelsContainer.className = 'month-labels-container';
+        
+        months.forEach((monthData, index) => {
+            const monthLabel = document.createElement('div');
+            monthLabel.className = 'month-label';
+            monthLabel.textContent = monthNames[monthData.month];
+            labelsContainer.appendChild(monthLabel);
+        });
+        
+        graph.appendChild(labelsContainer);
+    }
+    
+    navigateQuarter(direction) {
+        this.currentQuarter += direction;
+        
+        if (this.currentQuarter < 0) {
+            this.currentQuarter = 3;
             this.currentYear--;
-        } else if (this.currentMonth > 11) {
-            this.currentMonth = 0;
+        } else if (this.currentQuarter > 3) {
+            this.currentQuarter = 0;
             this.currentYear++;
         }
         
-        this.updateMonthDisplay();
+        this.updateQuarterDisplay();
         this.renderContributionGraph();
     }
     
-    updateMonthDisplay() {
+    updateQuarterDisplay() {
+        const quarterNames = ['Q1', 'Q2', 'Q3', 'Q4'];
         const monthNames = [
-            'January', 'February', 'March', 'April', 'May', 'June',
-            'July', 'August', 'September', 'October', 'November', 'December'
+            'Jan-Mar', 'Apr-Jun', 'Jul-Sep', 'Oct-Dec'
         ];
         
         const monthDisplay = document.getElementById('current-month');
         if (monthDisplay) {
-            monthDisplay.textContent = `${monthNames[this.currentMonth]} ${this.currentYear}`;
+            monthDisplay.textContent = `${quarterNames[this.currentQuarter]} ${this.currentYear} (${monthNames[this.currentQuarter]})`;
         }
     }
 }

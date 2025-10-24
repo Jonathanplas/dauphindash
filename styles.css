@@ -171,12 +171,35 @@ body {
     background: #ed8936;
 }
 
+.graph-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.day-labels {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 20px;
+}
+
+.day-label {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    color: #718096;
+    font-weight: 500;
+}
+
 .graph {
     display: grid;
-    grid-template-columns: repeat(53, 1fr);
+    grid-template-columns: repeat(7, 1fr);
     gap: 2px;
     max-width: 100%;
-    overflow-x: auto;
 }
 
 .day-cell {
@@ -244,6 +267,18 @@ body {
 
 .dot-third.active.workout-third {
     background: #ed8936;
+}
+
+.day-cell.other-month {
+    opacity: 0.3;
+}
+
+.day-cell.other-month .split-dot-inner {
+    background: #f1f5f9;
+}
+
+.day-cell.other-month .dot-third.active {
+    opacity: 0.5;
 }
 
 .edit-section {
@@ -392,11 +427,22 @@ body {
     }
     
     .graph {
-        grid-template-columns: repeat(53, 8px);
+        grid-template-columns: repeat(7, 1fr);
     }
     
     .day-cell {
-        width: 8px;
-        height: 8px;
+        width: 12px;
+        height: 12px;
+    }
+    
+    .split-dot-inner {
+        width: 10px;
+        height: 10px;
+    }
+    
+    .day-label {
+        width: 12px;
+        height: 12px;
+        font-size: 0.6rem;
     }
 }

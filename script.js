@@ -106,33 +106,52 @@ class DauphinDash {
         const graph = document.getElementById('contribution-graph');
         graph.innerHTML = '';
 
-        // Generate current month days
-        const daysInMonth = new Date(this.currentYear, this.currentMonth + 1, 0).getDate();
+        // Generate exactly one month with proper week structure
+        const firstDay = new Date(this.currentYear, this.currentMonth, 1);
+        const lastDay = new Date(this.currentYear, this.currentMonth + 1, 0);
         
-        const days = [];
-        for (let day = 1; day <= daysInMonth; day++) {
-            const date = new Date(this.currentYear, this.currentMonth, day);
-            const dateKey = this.getDateKey(date);
+        // Get the first Sunday of the month (or before if month doesn't start on Sunday)
+        const firstSunday = new Date(firstDay);
+        firstSunday.setDate(firstDay.getDate() - firstDay.getDay());
+        
+        // Get the last Saturday of the month (or after if month doesn't end on Saturday)
+        const lastSaturday = new Date(lastDay);
+        lastSaturday.setDate(lastDay.getDate() + (6 - lastDay.getDay()));
+        
+        // Create all days from first Sunday to last Saturday
+        const allDays = [];
+        const currentDate = new Date(firstSunday);
+        
+        while (currentDate <= lastSaturday) {
+            const dateKey = this.getDateKey(currentDate);
             const dayData = this.data[dateKey] || {};
             
-            days.push({
-                date: date,
+            allDays.push({
+                date: new Date(currentDate),
                 dateKey: dateKey,
-                data: dayData
+                data: dayData,
+                isCurrentMonth: currentDate.getMonth() === this.currentMonth
             });
+            
+            currentDate.setDate(currentDate.getDate() + 1);
         }
 
         // Create grid (7 columns for days of week)
         const weeks = [];
-        for (let i = 0; i < days.length; i += 7) {
-            weeks.push(days.slice(i, i + 7));
+        for (let i = 0; i < allDays.length; i += 7) {
+            weeks.push(allDays.slice(i, i + 7));
         }
 
-        weeks.forEach(week => {
+        weeks.forEach((week, weekIndex) => {
             week.forEach(day => {
                 const cell = document.createElement('div');
                 cell.className = 'day-cell split-dot';
                 cell.dataset.date = day.dateKey;
+                
+                // Fade out days not in current month
+                if (!day.isCurrentMonth) {
+                    cell.classList.add('other-month');
+                }
                 
                 // Create split dot with thirds
                 const hasWeight = day.data.weight !== null && day.data.weight !== undefined;

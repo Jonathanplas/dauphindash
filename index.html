@@ -15,24 +15,6 @@
         </header>
 
         <div class="dashboard">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Weight</h3>
-                    <div class="stat-value" id="current-weight">--</div>
-                    <div class="stat-change" id="weight-change">--</div>
-                </div>
-                <div class="stat-card">
-                    <h3>LeetCode</h3>
-                    <div class="stat-value" id="leetcode-total">0</div>
-                    <div class="stat-change" id="leetcode-this-week">0 this week</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Workouts</h3>
-                    <div class="stat-value" id="workout-streak">0</div>
-                    <div class="stat-change" id="workout-this-week">0 this week</div>
-                </div>
-            </div>
-
             <div class="contribution-graph">
                 <div class="graph-header">
                     <h2>Progress Overview</h2>
@@ -57,7 +39,36 @@
                             <span>Workout completed</span>
                         </div>
                     </div>
-                    <div class="graph" id="contribution-graph"></div>
+                    <div class="graph-wrapper">
+                        <div class="day-labels">
+                            <div class="day-label">S</div>
+                            <div class="day-label">M</div>
+                            <div class="day-label">T</div>
+                            <div class="day-label">W</div>
+                            <div class="day-label">T</div>
+                            <div class="day-label">F</div>
+                            <div class="day-label">S</div>
+                        </div>
+                        <div class="graph" id="contribution-graph"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Weight</h3>
+                    <div class="stat-value" id="current-weight">--</div>
+                    <div class="stat-change" id="weight-change">--</div>
+                </div>
+                <div class="stat-card">
+                    <h3>LeetCode</h3>
+                    <div class="stat-value" id="leetcode-total">0</div>
+                    <div class="stat-change" id="leetcode-this-week">0 this week</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Workouts</h3>
+                    <div class="stat-value" id="workout-streak">0</div>
+                    <div class="stat-change" id="workout-this-week">0 this week</div>
                 </div>
             </div>
 

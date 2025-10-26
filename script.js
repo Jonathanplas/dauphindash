@@ -48,28 +48,40 @@ class DauphinDash {
         return this.data[today] || { weight: null, leetcode: 0, workout: false };
     }
 
+    getMostRecentWeight() {
+        // Find the most recent weight entry
+        const sortedDates = Object.keys(this.data).sort().reverse();
+        for (const date of sortedDates) {
+            if (this.data[date].weight !== null && this.data[date].weight !== undefined) {
+                return { date, weight: this.data[date].weight };
+            }
+        }
+        return null;
+    }
+
     updateStats() {
         const today = this.getTodayData();
         
-        // Update weight
+        // Update weight - show most recent weight, not just today's
         const weightElement = document.getElementById('current-weight');
         const weightChangeElement = document.getElementById('weight-change');
         
-        if (today.weight) {
-            weightElement.textContent = `${today.weight} lbs`;
+        const recentWeight = this.getMostRecentWeight();
+        
+        if (recentWeight) {
+            weightElement.textContent = `${recentWeight.weight} lbs`;
             
-            // Calculate weight change from yesterday
-            const yesterday = this.getDateKey(new Date(Date.now() - 86400000));
-            const yesterdayData = this.data[yesterday];
-            if (yesterdayData && yesterdayData.weight) {
-                const change = today.weight - yesterdayData.weight;
-                const changeText = change > 0 ? `+${change.toFixed(1)}` : change.toFixed(1);
-                weightChangeElement.textContent = `${changeText} from yesterday`;
-                weightChangeElement.style.color = change > 0 ? '#e53e3e' : '#38a169';
+            const weightDate = new Date(recentWeight.date);
+            const daysAgo = Math.floor((Date.now() - weightDate.getTime()) / 86400000);
+            
+            if (daysAgo === 0) {
+                weightChangeElement.textContent = 'Today';
+            } else if (daysAgo === 1) {
+                weightChangeElement.textContent = 'Yesterday';
             } else {
-                weightChangeElement.textContent = 'First entry';
-                weightChangeElement.style.color = '#718096';
+                weightChangeElement.textContent = `${daysAgo} days ago`;
             }
+            weightChangeElement.style.color = '#718096';
         } else {
             weightElement.textContent = '--';
             weightChangeElement.textContent = 'No data';
@@ -695,10 +707,11 @@ class DauphinDash {
         const ctx = document.getElementById('workout-chart');
         if (!ctx) return;
 
-        // Get workout frequency for last 30 days (bar chart)
+        // Get cumulative workout count for last 30 days (line chart)
         const dates = [];
-        const workouts = [];
+        const cumulativeWorkouts = [];
         const today = new Date();
+        let total = 0;
         
         for (let i = 29; i >= 0; i--) {
             const date = new Date(today);
@@ -706,20 +719,25 @@ class DauphinDash {
             const dateKey = this.getDateKey(date);
             const dayData = this.data[dateKey];
             
+            if (dayData?.workout) {
+                total++;
+            }
+            
             dates.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-            workouts.push(dayData?.workout ? 1 : 0);
+            cumulativeWorkouts.push(total);
         }
 
         new Chart(ctx, {
-            type: 'bar',
+            type: 'line',
             data: {
                 labels: dates,
                 datasets: [{
-                    label: 'Workout',
-                    data: workouts,
-                    backgroundColor: workouts.map(w => w ? '#ed8936' : '#e2e8f0'),
-                    borderColor: workouts.map(w => w ? '#dd6b20' : '#cbd5e0'),
-                    borderWidth: 1
+                    label: 'Total Workouts',
+                    data: cumulativeWorkouts,
+                    borderColor: '#ed8936',
+                    backgroundColor: 'rgba(237, 137, 54, 0.1)',
+                    tension: 0.4,
+                    fill: true
                 }]
             },
             options: {
@@ -733,12 +751,8 @@ class DauphinDash {
                 scales: {
                     y: {
                         beginAtZero: true,
-                        max: 1,
                         ticks: {
-                            stepSize: 1,
-                            callback: function(value) {
-                                return value === 1 ? 'Yes' : 'No';
-                            }
+                            stepSize: 1
                         }
                     },
                     x: {

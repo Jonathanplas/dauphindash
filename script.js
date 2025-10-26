@@ -707,33 +707,41 @@ class DauphinDash {
         const ctx = document.getElementById('workout-chart');
         if (!ctx) return;
 
-        // Get cumulative workout count for last 30 days (line chart)
-        const dates = [];
-        const cumulativeWorkouts = [];
+        // Get workouts per week for the last several weeks
+        const weekLabels = [];
+        const workoutsPerWeek = [];
         const today = new Date();
-        let total = 0;
         
-        for (let i = 29; i >= 0; i--) {
-            const date = new Date(today);
-            date.setDate(date.getDate() - i);
-            const dateKey = this.getDateKey(date);
-            const dayData = this.data[dateKey];
+        // Calculate data for the last 12 weeks
+        for (let weekOffset = 11; weekOffset >= 0; weekOffset--) {
+            const weekEnd = new Date(today);
+            weekEnd.setDate(today.getDate() - (weekOffset * 7));
+            const weekStart = new Date(weekEnd);
+            weekStart.setDate(weekEnd.getDate() - 6);
             
-            if (dayData?.workout) {
-                total++;
+            // Count workouts in this week
+            let workoutCount = 0;
+            for (let d = new Date(weekStart); d <= weekEnd; d.setDate(d.getDate() + 1)) {
+                const dateKey = this.getDateKey(d);
+                const dayData = this.data[dateKey];
+                if (dayData?.workout) {
+                    workoutCount++;
+                }
             }
             
-            dates.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-            cumulativeWorkouts.push(total);
+            // Format week label
+            const weekLabel = `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+            weekLabels.push(weekLabel);
+            workoutsPerWeek.push(workoutCount);
         }
 
         new Chart(ctx, {
             type: 'line',
             data: {
-                labels: dates,
+                labels: weekLabels,
                 datasets: [{
-                    label: 'Total Workouts',
-                    data: cumulativeWorkouts,
+                    label: 'Workouts per Week',
+                    data: workoutsPerWeek,
                     borderColor: '#ed8936',
                     backgroundColor: 'rgba(237, 137, 54, 0.1)',
                     tension: 0.4,

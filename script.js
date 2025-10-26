@@ -224,24 +224,24 @@ class DauphinDash {
                     const dot = document.createElement('div');
                     dot.className = 'split-dot-inner';
                     
-                    // Weight third (top)
-                    const weightThird = document.createElement('div');
-                    weightThird.className = 'dot-third weight-third';
-                    if (hasWeight) weightThird.classList.add('active');
+                    // Weight quarter (top-left)
+                    const weightQuarter = document.createElement('div');
+                    weightQuarter.className = 'dot-quarter weight-quarter';
+                    if (hasWeight) weightQuarter.classList.add('active');
                     
-                    // LeetCode third (bottom-left)
-                    const leetcodeThird = document.createElement('div');
-                    leetcodeThird.className = 'dot-third leetcode-third';
-                    if (hasLeetcode) leetcodeThird.classList.add('active');
+                    // Workout quarter (top-right)
+                    const workoutQuarter = document.createElement('div');
+                    workoutQuarter.className = 'dot-quarter workout-quarter';
+                    if (hasWorkout) workoutQuarter.classList.add('active');
                     
-                    // Workout third (bottom-right)
-                    const workoutThird = document.createElement('div');
-                    workoutThird.className = 'dot-third workout-third';
-                    if (hasWorkout) workoutThird.classList.add('active');
+                    // LeetCode half (bottom half)
+                    const leetcodeHalf = document.createElement('div');
+                    leetcodeHalf.className = 'dot-half leetcode-half';
+                    if (hasLeetcode) leetcodeHalf.classList.add('active');
                     
-                    dot.appendChild(weightThird);
-                    dot.appendChild(leetcodeThird);
-                    dot.appendChild(workoutThird);
+                    dot.appendChild(weightQuarter);
+                    dot.appendChild(workoutQuarter);
+                    dot.appendChild(leetcodeHalf);
                     cell.appendChild(dot);
 
                     // Add tooltip

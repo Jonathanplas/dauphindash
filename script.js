@@ -10,6 +10,7 @@ class DauphinDash {
     async init() {
         this.renderStats();
         this.renderContributionGraph();
+        this.renderCharts();
         this.setupEventListeners();
         await this.initGistSync();
     }
@@ -561,6 +562,194 @@ class DauphinDash {
         if (monthDisplay) {
             monthDisplay.textContent = `${quarterNames[this.currentQuarter]} ${this.currentYear} (${monthNames[this.currentQuarter]})`;
         }
+    }
+
+    renderCharts() {
+        this.renderWeightChart();
+        this.renderLeetCodeChart();
+        this.renderWorkoutChart();
+    }
+
+    renderWeightChart() {
+        const ctx = document.getElementById('weight-chart');
+        if (!ctx) return;
+
+        // Get last 30 days of weight data
+        const dates = [];
+        const weights = [];
+        const today = new Date();
+        
+        for (let i = 29; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            const dateKey = this.getDateKey(date);
+            const dayData = this.data[dateKey];
+            
+            dates.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+            weights.push(dayData?.weight || null);
+        }
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Weight (lbs)',
+                    data: weights,
+                    borderColor: '#4299e1',
+                    backgroundColor: 'rgba(66, 153, 225, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    spanGaps: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        ticks: {
+                            callback: function(value) {
+                                return value + ' lbs';
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    renderLeetCodeChart() {
+        const ctx = document.getElementById('leetcode-chart');
+        if (!ctx) return;
+
+        // Get cumulative LeetCode progress over last 30 days
+        const dates = [];
+        const cumulative = [];
+        const today = new Date();
+        let total = 0;
+        
+        for (let i = 29; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            const dateKey = this.getDateKey(date);
+            const dayData = this.data[dateKey];
+            
+            total += dayData?.leetcode || 0;
+            dates.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+            cumulative.push(total);
+        }
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Total Problems',
+                    data: cumulative,
+                    borderColor: '#48bb78',
+                    backgroundColor: 'rgba(72, 187, 120, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    renderWorkoutChart() {
+        const ctx = document.getElementById('workout-chart');
+        if (!ctx) return;
+
+        // Get workout frequency for last 30 days (bar chart)
+        const dates = [];
+        const workouts = [];
+        const today = new Date();
+        
+        for (let i = 29; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            const dateKey = this.getDateKey(date);
+            const dayData = this.data[dateKey];
+            
+            dates.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+            workouts.push(dayData?.workout ? 1 : 0);
+        }
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Workout',
+                    data: workouts,
+                    backgroundColor: workouts.map(w => w ? '#ed8936' : '#e2e8f0'),
+                    borderColor: workouts.map(w => w ? '#dd6b20' : '#cbd5e0'),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 1,
+                        ticks: {
+                            stepSize: 1,
+                            callback: function(value) {
+                                return value === 1 ? 'Yes' : 'No';
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                }
+            }
+        });
     }
 }
 

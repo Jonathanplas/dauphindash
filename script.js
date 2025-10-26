@@ -136,155 +136,150 @@ class DauphinDash {
         const graph = document.getElementById('contribution-graph');
         graph.innerHTML = '';
 
-        // Generate three months for the quarter
         const quarterStartMonth = this.currentQuarter * 3;
-        const months = [];
-        
-        for (let monthOffset = 0; monthOffset < 3; monthOffset++) {
-            const month = quarterStartMonth + monthOffset;
-            const year = this.currentYear;
-            
-            // Get the first day of the month
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            
-            // Get the first Sunday of the month (or before if month doesn't start on Sunday)
-            const firstSunday = new Date(firstDay);
-            firstSunday.setDate(firstDay.getDate() - firstDay.getDay());
-            
-            // Get the last Saturday of the month (or after if month doesn't end on Saturday)
-            const lastSaturday = new Date(lastDay);
-            lastSaturday.setDate(lastDay.getDate() + (6 - lastDay.getDay()));
-            
-            // Create all days from first Sunday to last Saturday
-            const allDays = [];
-            const currentDate = new Date(firstSunday);
-            
-            while (currentDate <= lastSaturday) {
-                const dateKey = this.getDateKey(currentDate);
-                const dayData = this.data[dateKey] || {};
-                
-                allDays.push({
-                    date: new Date(currentDate),
-                    dateKey: dateKey,
-                    data: dayData,
-                    isCurrentMonth: currentDate.getMonth() === month,
-                    month: month,
-                    year: year
-                });
-                
-                currentDate.setDate(currentDate.getDate() + 1);
-            }
-            
-            months.push({
-                month: month,
-                year: year,
-                days: allDays
-            });
-        }
-
-        // Add month labels above each month
-        this.addHorizontalMonthLabels(graph, months);
-
-        // Create the graph wrapper that contains day labels and quarter container
-        const graphWrapper = document.createElement('div');
-        graphWrapper.className = 'graph-wrapper';
-        
-        // Add day labels
-        const dayLabelsContainer = document.createElement('div');
-        dayLabelsContainer.className = 'day-labels';
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-        dayLabels.forEach(label => {
+
+        // Create main container
+        const container = document.createElement('div');
+        container.className = 'calendar-container';
+
+        // Create month headers row
+        const monthHeadersRow = document.createElement('div');
+        monthHeadersRow.className = 'month-headers-row';
+        
+        // Empty space for day labels column
+        const emptyHeader = document.createElement('div');
+        emptyHeader.className = 'day-labels-header';
+        monthHeadersRow.appendChild(emptyHeader);
+
+        // Add month name headers
+        for (let i = 0; i < 3; i++) {
+            const monthIndex = quarterStartMonth + i;
+            const monthHeader = document.createElement('div');
+            monthHeader.className = 'month-header';
+            monthHeader.textContent = monthNames[monthIndex];
+            monthHeadersRow.appendChild(monthHeader);
+        }
+        container.appendChild(monthHeadersRow);
+
+        // Create calendar grid (7 rows for days of week)
+        for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
+            const row = document.createElement('div');
+            row.className = 'calendar-row';
+
+            // Add day label
             const dayLabel = document.createElement('div');
             dayLabel.className = 'day-label';
-            dayLabel.textContent = label;
-            dayLabelsContainer.appendChild(dayLabel);
-        });
-        graphWrapper.appendChild(dayLabelsContainer);
+            dayLabel.textContent = dayLabels[dayOfWeek];
+            row.appendChild(dayLabel);
 
-        // Create the horizontal layout with three month blocks
-        const quarterContainer = document.createElement('div');
-        quarterContainer.className = 'quarter-container';
-        
-        months.forEach((monthData, monthIndex) => {
-            // Create month block
-            const monthBlock = document.createElement('div');
-            monthBlock.className = 'month-block';
-            
-            // Create grid for this month (7 columns for days of week)
-            const weeks = [];
-            for (let i = 0; i < monthData.days.length; i += 7) {
-                weeks.push(monthData.days.slice(i, i + 7));
+            // Add cells for each month in this row
+            for (let monthOffset = 0; monthOffset < 3; monthOffset++) {
+                const month = quarterStartMonth + monthOffset;
+                const year = this.currentYear;
+                
+                const monthContainer = document.createElement('div');
+                monthContainer.className = 'month-row-cells';
+
+                // Get all dates for this day of week in this month
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                
+                // Find first occurrence of this day of week in the month
+                let currentDate = new Date(firstDay);
+                while (currentDate.getDay() !== dayOfWeek && currentDate <= lastDay) {
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+
+                // Add all occurrences of this day of week
+                while (currentDate <= lastDay) {
+                    const cell = this.createDayCell(currentDate, month, year);
+                    monthContainer.appendChild(cell);
+                    currentDate.setDate(currentDate.getDate() + 7);
+                }
+
+                // Fill remaining slots to maintain alignment (max 6 weeks)
+                const cellsInMonth = monthContainer.children.length;
+                const maxCells = 6; // Maximum weeks in a month
+                for (let j = cellsInMonth; j < maxCells; j++) {
+                    const emptyCell = document.createElement('div');
+                    emptyCell.className = 'day-cell empty-cell';
+                    monthContainer.appendChild(emptyCell);
+                }
+
+                row.appendChild(monthContainer);
             }
-            
-            weeks.forEach((week, weekIndex) => {
-                week.forEach(day => {
-                    const cell = document.createElement('div');
-                    cell.className = 'day-cell split-dot';
-                    cell.dataset.date = day.dateKey;
-                    
-                    // Fade out days not in current month
-                    if (!day.isCurrentMonth) {
-                        cell.classList.add('other-month');
-                    }
-                    
-                    // Create split dot with thirds
-                    const hasWeight = day.data.weight !== null && day.data.weight !== undefined;
-                    const hasLeetcode = day.data.leetcode > 0;
-                    const hasWorkout = day.data.workout === true;
-                    
-                    // Create the split dot visual
-                    const dot = document.createElement('div');
-                    dot.className = 'split-dot-inner';
-                    
-                    // Weight quarter (top-left)
-                    const weightQuarter = document.createElement('div');
-                    weightQuarter.className = 'dot-quarter weight-quarter';
-                    if (hasWeight) weightQuarter.classList.add('active');
-                    
-                    // Workout quarter (top-right)
-                    const workoutQuarter = document.createElement('div');
-                    workoutQuarter.className = 'dot-quarter workout-quarter';
-                    if (hasWorkout) workoutQuarter.classList.add('active');
-                    
-                    // LeetCode half (bottom half)
-                    const leetcodeHalf = document.createElement('div');
-                    leetcodeHalf.className = 'dot-half leetcode-half';
-                    if (hasLeetcode) leetcodeHalf.classList.add('active');
-                    
-                    dot.appendChild(weightQuarter);
-                    dot.appendChild(workoutQuarter);
-                    dot.appendChild(leetcodeHalf);
-                    cell.appendChild(dot);
 
-                    // Add tooltip
-                    const tooltip = this.createTooltip(day);
-                    cell.appendChild(tooltip);
-                    
-                    cell.addEventListener('mouseenter', () => {
-                        tooltip.classList.add('show');
-                    });
-                    
-                    cell.addEventListener('mouseleave', () => {
-                        tooltip.classList.remove('show');
-                    });
+            container.appendChild(row);
+        }
 
-                    monthBlock.appendChild(cell);
-                });
-            });
-            
-            quarterContainer.appendChild(monthBlock);
-            
-            // Add separator between months (except after the last month)
-            if (monthIndex < months.length - 1) {
-                const separator = document.createElement('div');
-                separator.className = 'month-separator';
-                quarterContainer.appendChild(separator);
-            }
+        graph.appendChild(container);
+    }
+
+    createDayCell(date, currentMonth, currentYear) {
+        const cell = document.createElement('div');
+        cell.className = 'day-cell split-dot';
+        
+        const dateKey = this.getDateKey(date);
+        cell.dataset.date = dateKey;
+        
+        const dayData = this.data[dateKey] || {};
+        const isCurrentMonth = date.getMonth() === currentMonth;
+        
+        // Fade out days not in current month
+        if (!isCurrentMonth) {
+            cell.classList.add('other-month');
+        }
+        
+        // Create split dot with activity indicators
+        const hasWeight = dayData.weight !== null && dayData.weight !== undefined;
+        const hasLeetcode = dayData.leetcode > 0;
+        const hasWorkout = dayData.workout === true;
+        
+        const dot = document.createElement('div');
+        dot.className = 'split-dot-inner';
+        
+        // Weight quarter (top-left)
+        const weightQuarter = document.createElement('div');
+        weightQuarter.className = 'dot-quarter weight-quarter';
+        if (hasWeight) weightQuarter.classList.add('active');
+        
+        // Workout quarter (top-right)
+        const workoutQuarter = document.createElement('div');
+        workoutQuarter.className = 'dot-quarter workout-quarter';
+        if (hasWorkout) workoutQuarter.classList.add('active');
+        
+        // LeetCode half (bottom half)
+        const leetcodeHalf = document.createElement('div');
+        leetcodeHalf.className = 'dot-half leetcode-half';
+        if (hasLeetcode) leetcodeHalf.classList.add('active');
+        
+        dot.appendChild(weightQuarter);
+        dot.appendChild(workoutQuarter);
+        dot.appendChild(leetcodeHalf);
+        cell.appendChild(dot);
+
+        // Add tooltip
+        const tooltip = this.createTooltip({ 
+            date: date, 
+            dateKey: dateKey, 
+            data: dayData,
+            isCurrentMonth: isCurrentMonth,
+            month: currentMonth,
+            year: currentYear
+        });
+        cell.appendChild(tooltip);
+        
+        cell.addEventListener('mouseenter', () => {
+            tooltip.classList.add('show');
         });
         
-        graphWrapper.appendChild(quarterContainer);
-        graph.appendChild(graphWrapper);
+        cell.addEventListener('mouseleave', () => {
+            tooltip.classList.remove('show');
+        });
+
+        return cell;
     }
 
     createTooltip(day) {
@@ -526,27 +521,6 @@ class DauphinDash {
             saveButton.textContent = originalText;
             saveButton.style.background = 'linear-gradient(135deg, #4299e1 0%, #3182ce 100%)';
         }, 2000);
-    }
-    
-    addHorizontalMonthLabels(graph, months) {
-        const monthNames = [
-            'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-        ];
-        
-        // Create month labels container
-        const labelsContainer = document.createElement('div');
-        labelsContainer.className = 'horizontal-month-labels-container';
-        
-        months.forEach((monthData, index) => {
-            const monthLabel = document.createElement('div');
-            monthLabel.className = 'horizontal-month-label';
-            monthLabel.textContent = monthNames[monthData.month];
-            labelsContainer.appendChild(monthLabel);
-        });
-        
-        // Insert the labels container at the beginning of the graph
-        graph.insertBefore(labelsContainer, graph.firstChild);
     }
     
     navigateQuarter(direction) {

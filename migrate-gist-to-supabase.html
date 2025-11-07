@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Migrate Gist to Supabase - DauphinDash</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #2d3748;
+        }
+
+        p {
+            color: #4a5568;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #3ecf8e 0%, #2d9e6f 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(62, 207, 142, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+
+        .status.info {
+            background: #bee3f8;
+            color: #2c5282;
+            border: 1px solid #90cdf4;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .note {
+            background: #fefcbf;
+            border: 1px solid #f6e05e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: #744210;
+        }
+
+        .note strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Migrate to Supabase</h1>
+        <p>This one-time migration will transfer all your data from GitHub Gist to Supabase.</p>
+
+        <div class="note">
+            <strong>⚠️ Note:</strong>
+            This is a one-time operation. After migration, your dashboard will automatically use Supabase.
+        </div>
+
+        <div class="form-group">
+            <label for="gist-id">GitHub Gist ID</label>
+            <input type="text" id="gist-id" placeholder="abc123def456...">
+            <small style="color: #718096; font-size: 0.85rem; margin-top: 5px; display: block;">
+                Find this in your Gist URL: https://gist.github.com/<strong>YOUR_GIST_ID</strong>
+            </small>
+        </div>
+
+        <div class="form-group">
+            <label for="github-token">GitHub Token (optional, for private Gists)</label>
+            <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxx">
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+
+        <div class="form-group">
+            <label for="supabase-url">Supabase Project URL</label>
+            <input type="text" id="supabase-url" placeholder="https://xxxxx.supabase.co">
+        </div>
+
+        <div class="form-group">
+            <label for="supabase-key">Supabase Anon Key</label>
+            <input type="password" id="supabase-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+        </div>
+
+        <button id="migrate-btn" onclick="migrate()">Start Migration</button>
+
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        async function migrate() {
+            const gistId = document.getElementById('gist-id').value.trim();
+            const githubToken = document.getElementById('github-token').value.trim();
+            const supabaseUrl = document.getElementById('supabase-url').value.trim();
+            const supabaseKey = document.getElementById('supabase-key').value.trim();
+            const statusDiv = document.getElementById('status');
+            const migrateBtn = document.getElementById('migrate-btn');
+
+            // Validate inputs
+            if (!gistId || !supabaseUrl || !supabaseKey) {
+                showStatus('error', '❌ Please fill in all required fields (Gist ID, Supabase URL, and Supabase Key)');
+                return;
+            }
+
+            migrateBtn.disabled = true;
+            showStatus('info', '🔄 Loading data from GitHub Gist...');
+
+            try {
+                // Step 1: Load data from Gist
+                const headers = {
+                    'Accept': 'application/vnd.github.v3+json'
+                };
+                if (githubToken) {
+                    headers['Authorization'] = `token ${githubToken}`;
+                }
+
+                const gistResponse = await fetch(`https://api.github.com/gists/${gistId}`, { headers });
+                
+                if (!gistResponse.ok) {
+                    throw new Error(`Failed to load Gist: ${gistResponse.statusText}`);
+                }
+
+                const gist = await gistResponse.json();
+                const fileContent = gist.files['dauphindash-data.json']?.content;
+                
+                if (!fileContent) {
+                    throw new Error('No dauphindash-data.json file found in Gist');
+                }
+
+                const gistData = JSON.parse(fileContent);
+                const entryCount = Object.keys(gistData).length;
+                
+                if (entryCount === 0) {
+                    showStatus('error', '❌ No data found in Gist');
+                    migrateBtn.disabled = false;
+                    return;
+                }
+
+                showStatus('info', `✅ Loaded ${entryCount} entries from Gist. Now migrating to Supabase...`);
+
+                // Step 2: Initialize Supabase client
+                const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+                // Step 3: Convert data format and insert into Supabase
+                const rows = Object.entries(gistData).map(([date, data]) => ({
+                    date: date,
+                    weight: data.weight,
+                    leetcode: data.leetcode || 0,
+                    workout: data.workout || false,
+                    updated_at: new Date().toISOString()
+                }));
+
+                showStatus('info', `🔄 Inserting ${rows.length} entries into Supabase...`);
+
+                const { data, error } = await supabase
+                    .from('daily_progress')
+                    .upsert(rows, {
+                        onConflict: 'date'
+                    });
+
+                if (error) {
+                    throw new Error(`Supabase error: ${error.message}`);
+                }
+
+                // Step 4: Save Supabase credentials to localStorage
+                localStorage.setItem('supabase-url', supabaseUrl);
+                localStorage.setItem('supabase-key', supabaseKey);
+
+                // Step 5: Clear old GitHub Gist credentials
+                localStorage.removeItem('github-access-token');
+                localStorage.removeItem('dauphindash-gist-id');
+
+                showStatus('success', `✅ Success! Migrated ${rows.length} entries to Supabase. You can now close this page and use your dashboard.`);
+                
+                setTimeout(() => {
+                    if (confirm('Migration complete! Would you like to go to your dashboard now?')) {
+                        window.location.href = './index.html';
+                    }
+                }, 2000);
+
+            } catch (error) {
+                console.error('Migration error:', error);
+                showStatus('error', `❌ Migration failed: ${error.message}`);
+                migrateBtn.disabled = false;
+            }
+        }
+
+        function showStatus(type, message) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type} show`;
+            statusDiv.textContent = message;
+        }
+
+        // Pre-fill from localStorage if available
+        window.addEventListener('DOMContentLoaded', () => {
+            const gistId = localStorage.getItem('dauphindash-gist-id');
+            const githubToken = localStorage.getItem('github-access-token');
+            
+            if (gistId) {
+                document.getElementById('gist-id').value = gistId;
+            }
+            if (githubToken) {
+                document.getElementById('github-token').value = githubToken;
+            }
+        });
+    </script>
+</body>
+</html>
+

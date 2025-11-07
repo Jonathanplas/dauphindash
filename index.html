@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
@@ -100,55 +101,59 @@
             </div>
 
             <div class="sync-section">
-                <h2>GitHub Sync</h2>
+                <h2>Cloud Sync</h2>
                 <div id="sync-status" class="sync-status">
                     <div id="sync-disconnected" class="sync-state">
                         <p>💾 Data is currently saved locally only</p>
-                        <button id="setup-github-btn" class="github-btn">🔗 Connect GitHub for Cloud Sync</button>
+                        <button id="setup-supabase-btn" class="supabase-btn">🔗 Connect Supabase for Cloud Sync</button>
                     </div>
                     <div id="sync-connected" class="sync-state" style="display: none;">
-                        <p>✅ Syncing to GitHub Gist</p>
-                        <a id="gist-link" href="#" target="_blank" class="gist-link">View your Gist →</a>
-                        <button id="disconnect-github-btn" class="github-btn-secondary">Disconnect</button>
+                        <p>✅ Syncing to Supabase</p>
+                        <a id="supabase-link" href="#" target="_blank" class="supabase-link">View your Dashboard →</a>
+                        <button id="disconnect-supabase-btn" class="supabase-btn-secondary">Disconnect</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- GitHub Token Setup Modal -->
-    <div id="github-modal" class="modal" style="display: none;">
+    <!-- Supabase Setup Modal -->
+    <div id="supabase-modal" class="modal" style="display: none;">
         <div class="modal-content">
-            <h2>Connect GitHub for Cloud Sync</h2>
-            <p>To sync your data across devices, you'll need a GitHub Personal Access Token.</p>
+            <h2>Connect Supabase for Cloud Sync</h2>
+            <p>To sync your data across devices, connect your Supabase project.</p>
             
             <div class="setup-steps">
                 <h3>Setup Steps:</h3>
                 <ol>
-                    <li>Go to <a href="https://github.com/settings/tokens/new" target="_blank">GitHub Token Settings</a></li>
-                    <li>Click "Generate new token" → "Generate new token (classic)"</li>
-                    <li>Give it a name: "DauphinDash"</li>
-                    <li>Set expiration: "No expiration" (or your preference)</li>
-                    <li>Check ONLY the "<strong>gist</strong>" scope</li>
-                    <li>Click "Generate token" at the bottom</li>
-                    <li>Copy the token and paste it below</li>
+                    <li>Go to your <a href="https://supabase.com/dashboard" target="_blank">Supabase Dashboard</a></li>
+                    <li>Select your project (or create one)</li>
+                    <li>Go to <strong>Settings</strong> → <strong>API</strong></li>
+                    <li>Copy your <strong>Project URL</strong> (looks like <code>https://xxxxx.supabase.co</code>)</li>
+                    <li>Copy your <strong>anon public</strong> key</li>
+                    <li>Make sure you created the <strong>daily_progress</strong> table with RLS enabled</li>
+                    <li>Paste both values below</li>
                 </ol>
             </div>
 
             <div class="form-group">
-                <label for="github-token-input">GitHub Personal Access Token</label>
-                <input type="password" id="github-token-input" placeholder="ghp_xxxxxxxxxxxx">
+                <label for="supabase-url-input">Supabase Project URL</label>
+                <input type="text" id="supabase-url-input" placeholder="https://xxxxx.supabase.co">
+            </div>
+
+            <div class="form-group">
+                <label for="supabase-key-input">Supabase Anon Key</label>
+                <input type="password" id="supabase-key-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
             </div>
 
             <div class="modal-buttons">
-                <button id="save-token-btn" class="save-btn">Connect</button>
-                <button id="cancel-token-btn" class="cancel-btn">Cancel</button>
+                <button id="save-supabase-btn" class="save-btn">Connect</button>
+                <button id="cancel-supabase-btn" class="cancel-btn">Cancel</button>
             </div>
         </div>
     </div>
 
-    <script src="gist-sync.js"></script>
+    <script src="supabase-sync.js"></script>
     <script src="script.js"></script>
-    <!-- Force rebuild -->
 </body>
 </html>

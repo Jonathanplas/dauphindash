@@ -568,8 +568,8 @@ body {
     font-size: 1rem;
 }
 
-.github-btn {
-    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+.supabase-btn {
+    background: linear-gradient(135deg, #3ecf8e 0%, #2d9e6f 100%);
     color: white;
     border: none;
     padding: 14px 28px;
@@ -580,12 +580,12 @@ body {
     transition: all 0.2s ease;
 }
 
-.github-btn:hover {
+.supabase-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(45, 55, 72, 0.3);
+    box-shadow: 0 8px 25px rgba(62, 207, 142, 0.3);
 }
 
-.github-btn-secondary {
+.supabase-btn-secondary {
     background: #e2e8f0;
     color: #4a5568;
     border: none;
@@ -598,21 +598,21 @@ body {
     margin-top: 10px;
 }
 
-.github-btn-secondary:hover {
+.supabase-btn-secondary:hover {
     background: #cbd5e0;
 }
 
-.gist-link {
+.supabase-link {
     display: inline-block;
-    color: #4299e1;
+    color: #3ecf8e;
     text-decoration: none;
     font-weight: 600;
     margin: 10px 0;
     transition: color 0.2s ease;
 }
 
-.gist-link:hover {
-    color: #3182ce;
+.supabase-link:hover {
+    color: #2d9e6f;
     text-decoration: underline;
 }
 

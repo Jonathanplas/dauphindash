@@ -79,8 +79,12 @@
             </div>
 
             <div class="edit-section">
-                <h2>Add Today's Progress</h2>
+                <h2>Add Progress</h2>
                 <div class="edit-form">
+                    <div class="form-group">
+                        <label for="date-input">Date</label>
+                        <input type="date" id="date-input">
+                    </div>
                     <div class="form-group">
                         <label for="weight-input">Weight (lbs)</label>
                         <input type="number" id="weight-input" step="0.1" placeholder="Enter weight">
@@ -93,7 +97,7 @@
                         <label class="checkbox-label">
                             <input type="checkbox" id="workout-checkbox">
                             <span class="checkmark"></span>
-                            Worked out today
+                            Workout completed
                         </label>
                     </div>
                     <button id="save-button" class="save-btn">Save Progress</button>

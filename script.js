@@ -472,23 +472,45 @@ class DauphinDash {
     }
 
     loadTodayData() {
-        const todayData = this.getTodayData();
+        // Set date input to today
+        const dateInput = document.getElementById('date-input');
+        const today = new Date();
+        dateInput.value = this.getDateKey(today);
         
-        // Load today's data into the form
-        document.getElementById('weight-input').value = todayData.weight || '';
-        document.getElementById('leetcode-input').value = todayData.leetcode || '';
+        // Load today's data
+        this.loadDataForDate(this.getDateKey(today));
+        
+        // Listen for date changes
+        dateInput.addEventListener('change', (e) => {
+            this.loadDataForDate(e.target.value);
+        });
+    }
+
+    loadDataForDate(dateKey) {
+        const dateData = this.data[dateKey] || { weight: null, leetcode: 0, workout: false };
+        
+        // Load data into the form
+        document.getElementById('weight-input').value = dateData.weight || '';
+        document.getElementById('leetcode-input').value = dateData.leetcode || '';
         
         // Handle custom checkbox
         const workoutCheckbox = document.getElementById('workout-checkbox');
         if (workoutCheckbox) {
-            workoutCheckbox.checked = todayData.workout || false;
+            workoutCheckbox.checked = dateData.workout || false;
             // Trigger change event to update visual state
             workoutCheckbox.dispatchEvent(new Event('change'));
         }
     }
 
     async saveProgress() {
-        const today = this.getDateKey();
+        const dateInput = document.getElementById('date-input');
+        const selectedDate = dateInput.value;
+        
+        if (!selectedDate) {
+            alert('Please select a date');
+            return;
+        }
+        
         const weightInput = document.getElementById('weight-input');
         const leetcodeInput = document.getElementById('leetcode-input');
         const workoutCheckbox = document.getElementById('workout-checkbox');
@@ -502,7 +524,7 @@ class DauphinDash {
         const leetcode = parseInt(leetcodeInput.value) || 0;
         const workout = workoutCheckbox.checked;
         
-        this.data[today] = {
+        this.data[selectedDate] = {
             weight: weight || null,
             leetcode: leetcode,
             workout: workout
@@ -512,7 +534,7 @@ class DauphinDash {
         
         // Sync to Supabase if configured
         if (this.supabaseSync.isConfigured()) {
-            await this.supabaseSync.saveDayData(today, this.data[today]);
+            await this.supabaseSync.saveDayData(selectedDate, this.data[selectedDate]);
         }
         
         this.renderStats();
@@ -522,7 +544,13 @@ class DauphinDash {
         // Show success feedback
         const saveButton = document.getElementById('save-button');
         const originalText = saveButton.textContent;
-        saveButton.textContent = this.supabaseSync.isConfigured() ? 'Saved & Synced!' : 'Saved!';
+        const dateObj = new Date(selectedDate);
+        const today = new Date();
+        const isToday = this.getDateKey(dateObj) === this.getDateKey(today);
+        
+        saveButton.textContent = this.supabaseSync.isConfigured() ? 
+            (isToday ? 'Saved & Synced!' : 'Updated & Synced!') : 
+            (isToday ? 'Saved!' : 'Updated!');
         saveButton.style.background = 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)';
         
         setTimeout(() => {

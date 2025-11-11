@@ -1,34 +1,42 @@
 // Supabase Sync for DauphinDash
 // Handles all data persistence with Supabase using authentication
 
+// ⚙️ CONFIGURATION - Replace with your Supabase project credentials
+// Get these from: Supabase Dashboard → Settings → API
+const SUPABASE_CONFIG = {
+    url: 'https://errqduxqwiuxuczujdgh.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVycnFkdXhxd2l1eHVjenVqZGdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0NzY3NjEsImV4cCI6MjA3ODA1Mjc2MX0.21AJDJMIz9Q2gtzWojOm5NQQfr-_jPyE56Yeey-xGco'
+};
+
 class SupabaseSync {
     constructor() {
-        this.supabaseUrl = localStorage.getItem('supabase-url');
+        // Use hardcoded config or fall back to localStorage for backward compatibility
+        this.supabaseUrl = SUPABASE_CONFIG.url !== 'YOUR_SUPABASE_URL_HERE' 
+            ? SUPABASE_CONFIG.url 
+            : localStorage.getItem('supabase-url');
+        
+        this.anonKey = SUPABASE_CONFIG.anonKey !== 'YOUR_SUPABASE_ANON_KEY_HERE'
+            ? SUPABASE_CONFIG.anonKey
+            : localStorage.getItem('supabase-anon-key');
+        
         this.client = null;
         this.syncStatus = { syncing: false, lastSync: null, error: null };
         
-        if (this.supabaseUrl) {
-            this.initializeClient();
+        this.initializeClient();
+        if (this.client) {
             this.checkSession();
         }
     }
 
     // Initialize Supabase client (using anon key for auth)
     initializeClient() {
-        if (!this.supabaseUrl) {
+        if (!this.supabaseUrl || !this.anonKey) {
+            console.warn('Supabase not configured. Please set credentials in supabase-sync.js');
             return;
         }
         
         try {
-            // Use anon key - Supabase Auth will handle the rest
-            // You'll need to set this in your Supabase project settings
-            const anonKey = this.getAnonKey();
-            if (!anonKey) {
-                console.warn('Supabase anon key not configured');
-                return;
-            }
-            
-            this.client = supabase.createClient(this.supabaseUrl, anonKey, {
+            this.client = supabase.createClient(this.supabaseUrl, this.anonKey, {
                 auth: {
                     persistSession: true,
                     autoRefreshToken: true,
@@ -42,19 +50,15 @@ class SupabaseSync {
         }
     }
 
-    // Get anon key from localStorage or environment
+    // Get anon key (for backward compatibility)
     getAnonKey() {
-        // First check localStorage (for manual setup)
-        const stored = localStorage.getItem('supabase-anon-key');
-        if (stored) return stored;
-        
-        // Could also check environment variables or config
-        return null;
+        return this.anonKey;
     }
 
-    // Set Supabase URL and anon key
+    // Set Supabase URL and anon key (for backward compatibility with manual setup)
     setConfig(url, anonKey) {
         this.supabaseUrl = url;
+        this.anonKey = anonKey;
         localStorage.setItem('supabase-url', url);
         if (anonKey) {
             localStorage.setItem('supabase-anon-key', anonKey);

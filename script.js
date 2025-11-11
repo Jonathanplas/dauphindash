@@ -437,6 +437,12 @@ class DauphinDash {
         const userEmailSpan = document.getElementById('user-email');
         const supabaseLink = document.getElementById('supabase-link');
 
+        // Check if all required elements exist
+        if (!notConfigured || !notAuthenticated || !connected) {
+            console.warn('Sync status UI elements not found');
+            return;
+        }
+
         if (!this.supabaseSync.isConfigured()) {
             // Not configured - show setup button
             notConfigured.style.display = 'block';
@@ -572,14 +578,31 @@ class DauphinDash {
         try {
             if (this.authMode === 'signin') {
                 await this.supabaseSync.signIn(email, password);
+                // Success - load data and update UI
+                await this.initSupabaseSync();
+                this.hideSupabaseModal();
+                this.updateSyncStatusUI();
             } else {
-                await this.supabaseSync.signUp(email, password);
+                const result = await this.supabaseSync.signUp(email, password);
+                
+                // Check if email confirmation is required
+                if (result.user && !result.session) {
+                    // Email confirmation required
+                    this.showAuthSuccess('✅ Account created! Please check your email to confirm your account before signing in.');
+                    // Switch to sign-in mode
+                    setTimeout(() => {
+                        this.authMode = 'signin';
+                        this.updateAuthUI();
+                    }, 3000);
+                } else if (result.session) {
+                    // Email confirmation disabled - user can sign in immediately
+                    await this.initSupabaseSync();
+                    this.hideSupabaseModal();
+                    this.updateSyncStatusUI();
+                } else {
+                    this.showAuthError('Signup completed but status unclear. Please try signing in.');
+                }
             }
-
-            // Success - load data and update UI
-            await this.initSupabaseSync();
-            this.hideSupabaseModal();
-            this.updateSyncStatusUI();
         } catch (error) {
             this.showAuthError(error.message || 'Authentication failed');
         }
@@ -590,6 +613,16 @@ class DauphinDash {
         if (errorDiv) {
             errorDiv.textContent = message;
             errorDiv.style.display = 'block';
+            errorDiv.className = 'status error';
+        }
+    }
+
+    showAuthSuccess(message) {
+        const errorDiv = document.getElementById('auth-error');
+        if (errorDiv) {
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            errorDiv.className = 'status success';
         }
     }
 

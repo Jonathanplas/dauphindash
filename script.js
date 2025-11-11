@@ -360,27 +360,49 @@ class DauphinDash {
         // Update sync status UI
         this.updateSyncStatusUI();
 
-        // Setup Supabase button
+        // Setup Supabase button (first time setup)
         const setupBtn = document.getElementById('setup-supabase-btn');
         if (setupBtn) {
-            setupBtn.addEventListener('click', () => this.showSupabaseModal());
+            setupBtn.addEventListener('click', () => this.showSupabaseSetup());
         }
 
-        // Disconnect Supabase button
-        const disconnectBtn = document.getElementById('disconnect-supabase-btn');
-        if (disconnectBtn) {
-            disconnectBtn.addEventListener('click', () => this.disconnectSupabase());
+        // Sign in button
+        const signInBtn = document.getElementById('sign-in-btn');
+        if (signInBtn) {
+            signInBtn.addEventListener('click', () => this.showSupabaseAuth());
         }
 
-        // Modal buttons
-        const saveSupabaseBtn = document.getElementById('save-supabase-btn');
-        if (saveSupabaseBtn) {
-            saveSupabaseBtn.addEventListener('click', () => this.saveSupabaseCredentials());
+        // Sign out button
+        const signOutBtn = document.getElementById('sign-out-btn');
+        if (signOutBtn) {
+            signOutBtn.addEventListener('click', () => this.signOut());
         }
 
-        const cancelSupabaseBtn = document.getElementById('cancel-supabase-btn');
-        if (cancelSupabaseBtn) {
-            cancelSupabaseBtn.addEventListener('click', () => this.hideSupabaseModal());
+        // Setup modal buttons
+        const saveConfigBtn = document.getElementById('save-supabase-config-btn');
+        if (saveConfigBtn) {
+            saveConfigBtn.addEventListener('click', () => this.saveSupabaseConfig());
+        }
+
+        const cancelSetupBtn = document.getElementById('cancel-supabase-btn');
+        if (cancelSetupBtn) {
+            cancelSetupBtn.addEventListener('click', () => this.hideSupabaseModal());
+        }
+
+        // Auth modal buttons
+        const authSubmitBtn = document.getElementById('auth-submit-btn');
+        if (authSubmitBtn) {
+            authSubmitBtn.addEventListener('click', () => this.handleAuth());
+        }
+
+        const authSwitchBtn = document.getElementById('auth-switch-btn');
+        if (authSwitchBtn) {
+            authSwitchBtn.addEventListener('click', () => this.toggleAuthMode());
+        }
+
+        const cancelAuthBtn = document.getElementById('cancel-auth-btn');
+        if (cancelAuthBtn) {
+            cancelAuthBtn.addEventListener('click', () => this.hideSupabaseModal());
         }
 
         // Close modal on outside click
@@ -392,31 +414,106 @@ class DauphinDash {
                 }
             });
         }
+
+        // Check for existing session on load
+        this.checkAuthStatus();
     }
 
-    updateSyncStatusUI() {
-        const isConnected = this.supabaseSync.isConfigured();
-        const disconnectedState = document.getElementById('sync-disconnected');
-        const connectedState = document.getElementById('sync-connected');
-        const supabaseLink = document.getElementById('supabase-link');
-
-        if (isConnected) {
-            disconnectedState.style.display = 'none';
-            connectedState.style.display = 'block';
-            const dashboardUrl = this.supabaseSync.getDashboardUrl();
-            if (dashboardUrl && supabaseLink) {
-                supabaseLink.href = dashboardUrl;
+    async checkAuthStatus() {
+        if (this.supabaseSync.isConfigured()) {
+            const session = await this.supabaseSync.getSession();
+            if (session) {
+                // User is authenticated, load data
+                await this.initSupabaseSync();
             }
-        } else {
-            disconnectedState.style.display = 'block';
-            connectedState.style.display = 'none';
+            this.updateSyncStatusUI();
         }
     }
 
-    showSupabaseModal() {
+    async updateSyncStatusUI() {
+        const notConfigured = document.getElementById('sync-not-configured');
+        const notAuthenticated = document.getElementById('sync-not-authenticated');
+        const connected = document.getElementById('sync-connected');
+        const userEmailSpan = document.getElementById('user-email');
+        const supabaseLink = document.getElementById('supabase-link');
+
+        if (!this.supabaseSync.isConfigured()) {
+            // Not configured - show setup button
+            notConfigured.style.display = 'block';
+            notAuthenticated.style.display = 'none';
+            connected.style.display = 'none';
+        } else {
+            // Check if authenticated
+            const session = await this.supabaseSync.getSession();
+            if (session) {
+                // Authenticated - show connected state
+                notConfigured.style.display = 'none';
+                notAuthenticated.style.display = 'none';
+                connected.style.display = 'block';
+                
+                const email = await this.supabaseSync.getCurrentUserEmail();
+                if (userEmailSpan && email) {
+                    userEmailSpan.textContent = email;
+                }
+                
+                const dashboardUrl = this.supabaseSync.getDashboardUrl();
+                if (dashboardUrl && supabaseLink) {
+                    supabaseLink.href = dashboardUrl;
+                }
+            } else {
+                // Configured but not authenticated - show sign in
+                notConfigured.style.display = 'none';
+                notAuthenticated.style.display = 'block';
+                connected.style.display = 'none';
+            }
+        }
+    }
+
+    showSupabaseSetup() {
         const modal = document.getElementById('supabase-modal');
+        const setupView = document.getElementById('setup-view');
+        const authView = document.getElementById('auth-view');
         if (modal) {
+            setupView.style.display = 'block';
+            authView.style.display = 'none';
             modal.style.display = 'flex';
+        }
+    }
+
+    showSupabaseAuth() {
+        const modal = document.getElementById('supabase-modal');
+        const setupView = document.getElementById('setup-view');
+        const authView = document.getElementById('auth-view');
+        if (modal) {
+            setupView.style.display = 'none';
+            authView.style.display = 'block';
+            this.authMode = 'signin';
+            this.updateAuthUI();
+            modal.style.display = 'flex';
+        }
+    }
+
+    toggleAuthMode() {
+        this.authMode = this.authMode === 'signin' ? 'signup' : 'signin';
+        this.updateAuthUI();
+    }
+
+    updateAuthUI() {
+        const title = document.getElementById('auth-title');
+        const subtitle = document.getElementById('auth-subtitle');
+        const submitBtn = document.getElementById('auth-submit-btn');
+        const switchBtn = document.getElementById('auth-switch-btn');
+
+        if (this.authMode === 'signin') {
+            title.textContent = 'Sign In';
+            subtitle.textContent = 'Sign in to sync your data across devices';
+            submitBtn.textContent = 'Sign In';
+            switchBtn.textContent = 'Need an account? Sign Up';
+        } else {
+            title.textContent = 'Sign Up';
+            subtitle.textContent = 'Create an account to sync your data';
+            submitBtn.textContent = 'Sign Up';
+            switchBtn.textContent = 'Already have an account? Sign In';
         }
     }
 
@@ -424,53 +521,81 @@ class DauphinDash {
         const modal = document.getElementById('supabase-modal');
         const urlInput = document.getElementById('supabase-url-input');
         const keyInput = document.getElementById('supabase-key-input');
+        const emailInput = document.getElementById('auth-email-input');
+        const passwordInput = document.getElementById('auth-password-input');
+        const errorDiv = document.getElementById('auth-error');
+        
         if (modal) {
             modal.style.display = 'none';
         }
-        if (urlInput) {
-            urlInput.value = '';
-        }
-        if (keyInput) {
-            keyInput.value = '';
+        if (urlInput) urlInput.value = '';
+        if (keyInput) keyInput.value = '';
+        if (emailInput) emailInput.value = '';
+        if (passwordInput) passwordInput.value = '';
+        if (errorDiv) {
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
         }
     }
 
-    async saveSupabaseCredentials() {
+    async saveSupabaseConfig() {
         const urlInput = document.getElementById('supabase-url-input');
         const keyInput = document.getElementById('supabase-key-input');
         const url = urlInput?.value.trim();
         const key = keyInput?.value.trim();
 
         if (!url || !key) {
-            alert('Please enter both Supabase URL and API key');
+            alert('Please enter both Supabase URL and anon key');
             return;
         }
 
-        // Set the credentials
-        this.supabaseSync.setCredentials(url, key);
+        // Set the config
+        this.supabaseSync.setConfig(url, key);
 
-        // Test the connection
-        const isValid = await this.supabaseSync.testConnection();
-        if (!isValid) {
-            alert('Failed to connect to Supabase. Please check your credentials and make sure the daily_progress table exists.');
-            this.supabaseSync.disconnect();
+        // Close setup modal and show auth
+        this.hideSupabaseModal();
+        this.showSupabaseAuth();
+    }
+
+    async handleAuth() {
+        const emailInput = document.getElementById('auth-email-input');
+        const passwordInput = document.getElementById('auth-password-input');
+        const errorDiv = document.getElementById('auth-error');
+        const email = emailInput?.value.trim();
+        const password = passwordInput?.value.trim();
+
+        if (!email || !password) {
+            this.showAuthError('Please enter both email and password');
             return;
         }
 
-        // Sync current local data to Supabase
-        const synced = await this.supabaseSync.syncAllData(this.data);
-        if (synced) {
-            alert('✅ Connected to Supabase! Your data will now sync automatically.');
+        try {
+            if (this.authMode === 'signin') {
+                await this.supabaseSync.signIn(email, password);
+            } else {
+                await this.supabaseSync.signUp(email, password);
+            }
+
+            // Success - load data and update UI
+            await this.initSupabaseSync();
             this.hideSupabaseModal();
             this.updateSyncStatusUI();
-        } else {
-            alert('Failed to sync data to Supabase. Please try again.');
+        } catch (error) {
+            this.showAuthError(error.message || 'Authentication failed');
         }
     }
 
-    async disconnectSupabase() {
-        if (confirm('Disconnect from Supabase? Your data will remain locally but won\'t sync anymore.')) {
-            this.supabaseSync.disconnect();
+    showAuthError(message) {
+        const errorDiv = document.getElementById('auth-error');
+        if (errorDiv) {
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+    }
+
+    async signOut() {
+        if (confirm('Sign out? Your data will remain locally but won\'t sync anymore.')) {
+            await this.supabaseSync.disconnect();
             this.updateSyncStatusUI();
         }
     }

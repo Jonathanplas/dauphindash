@@ -720,3 +720,13 @@ body {
 .cancel-btn:hover {
     background: #cbd5e0;
 }
+
+.status.error {
+    background: #fed7d7;
+    color: #742a2a;
+    border: 1px solid #fc8181;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+}

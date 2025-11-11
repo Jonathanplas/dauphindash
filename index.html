@@ -107,14 +107,18 @@
             <div class="sync-section">
                 <h2>Cloud Sync</h2>
                 <div id="sync-status" class="sync-status">
-                    <div id="sync-disconnected" class="sync-state">
+                    <div id="sync-not-configured" class="sync-state">
                         <p>💾 Data is currently saved locally only</p>
-                        <button id="setup-supabase-btn" class="supabase-btn">🔗 Connect Supabase for Cloud Sync</button>
+                        <button id="setup-supabase-btn" class="supabase-btn">🔗 Setup Supabase</button>
+                    </div>
+                    <div id="sync-not-authenticated" class="sync-state" style="display: none;">
+                        <p>🔐 Sign in to sync your data</p>
+                        <button id="sign-in-btn" class="supabase-btn">Sign In</button>
                     </div>
                     <div id="sync-connected" class="sync-state" style="display: none;">
-                        <p>✅ Syncing to Supabase</p>
-                        <a id="supabase-link" href="#" target="_blank" class="supabase-link">View your Dashboard →</a>
-                        <button id="disconnect-supabase-btn" class="supabase-btn-secondary">Disconnect</button>
+                        <p>✅ Synced as <span id="user-email"></span></p>
+                        <a id="supabase-link" href="#" target="_blank" class="supabase-link">View Dashboard →</a>
+                        <button id="sign-out-btn" class="supabase-btn-secondary">Sign Out</button>
                     </div>
                 </div>
             </div>
@@ -124,35 +128,59 @@
     <!-- Supabase Setup Modal -->
     <div id="supabase-modal" class="modal" style="display: none;">
         <div class="modal-content">
-            <h2>Connect Supabase for Cloud Sync</h2>
-            <p>To sync your data across devices, connect your Supabase project.</p>
-            
-            <div class="setup-steps">
-                <h3>Setup Steps:</h3>
-                <ol>
-                    <li>Go to your <a href="https://supabase.com/dashboard" target="_blank">Supabase Dashboard</a></li>
-                    <li>Select your project (or create one)</li>
-                    <li>Go to <strong>Settings</strong> → <strong>API</strong></li>
-                    <li>Copy your <strong>Project URL</strong> (looks like <code>https://xxxxx.supabase.co</code>)</li>
-                    <li>Copy your <strong>anon public</strong> key</li>
-                    <li>Make sure you created the <strong>daily_progress</strong> table with RLS enabled</li>
-                    <li>Paste both values below</li>
-                </ol>
+            <div id="setup-view">
+                <h2>Setup Supabase</h2>
+                <p>First, configure your Supabase project URL and anon key (one-time setup).</p>
+                
+                <div class="setup-steps">
+                    <h3>Setup Steps:</h3>
+                    <ol>
+                        <li>Go to your <a href="https://supabase.com/dashboard" target="_blank">Supabase Dashboard</a></li>
+                        <li>Select your project (or create one)</li>
+                        <li>Go to <strong>Settings</strong> → <strong>API</strong></li>
+                        <li>Copy your <strong>Project URL</strong> (looks like <code>https://xxxxx.supabase.co</code>)</li>
+                        <li>Copy your <strong>anon public</strong> key</li>
+                        <li>Paste both values below</li>
+                    </ol>
+                </div>
+
+                <div class="form-group">
+                    <label for="supabase-url-input">Supabase Project URL</label>
+                    <input type="text" id="supabase-url-input" placeholder="https://xxxxx.supabase.co">
+                </div>
+
+                <div class="form-group">
+                    <label for="supabase-key-input">Supabase Anon Key</label>
+                    <input type="password" id="supabase-key-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+                </div>
+
+                <div class="modal-buttons">
+                    <button id="save-supabase-config-btn" class="save-btn">Save Config</button>
+                    <button id="cancel-supabase-btn" class="cancel-btn">Cancel</button>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="supabase-url-input">Supabase Project URL</label>
-                <input type="text" id="supabase-url-input" placeholder="https://xxxxx.supabase.co">
-            </div>
+            <div id="auth-view" style="display: none;">
+                <h2 id="auth-title">Sign In</h2>
+                <p id="auth-subtitle">Sign in to sync your data across devices</p>
 
-            <div class="form-group">
-                <label for="supabase-key-input">Supabase Anon Key</label>
-                <input type="password" id="supabase-key-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
-            </div>
+                <div class="form-group">
+                    <label for="auth-email-input">Email</label>
+                    <input type="email" id="auth-email-input" placeholder="your@email.com">
+                </div>
 
-            <div class="modal-buttons">
-                <button id="save-supabase-btn" class="save-btn">Connect</button>
-                <button id="cancel-supabase-btn" class="cancel-btn">Cancel</button>
+                <div class="form-group">
+                    <label for="auth-password-input">Password</label>
+                    <input type="password" id="auth-password-input" placeholder="••••••••">
+                </div>
+
+                <div id="auth-error" class="status error" style="display: none;"></div>
+
+                <div class="modal-buttons">
+                    <button id="auth-submit-btn" class="save-btn">Sign In</button>
+                    <button id="auth-switch-btn" class="cancel-btn">Need an account? Sign Up</button>
+                    <button id="cancel-auth-btn" class="cancel-btn">Cancel</button>
+                </div>
             </div>
         </div>
     </div>

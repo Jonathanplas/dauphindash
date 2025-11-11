@@ -4,6 +4,12 @@ class DauphinDash {
         this.currentQuarter = Math.floor(new Date().getMonth() / 3);
         this.currentYear = new Date().getFullYear();
         this.supabaseSync = new SupabaseSync();
+        // Store chart instances to prevent duplication
+        this.charts = {
+            weight: null,
+            leetcode: null,
+            workout: null
+        };
         this.init();
     }
 
@@ -758,6 +764,11 @@ class DauphinDash {
         const ctx = document.getElementById('weight-chart');
         if (!ctx) return;
 
+        // Destroy existing chart if it exists
+        if (this.charts.weight) {
+            this.charts.weight.destroy();
+        }
+
         // Get last 30 days of weight data
         const dates = [];
         const weights = [];
@@ -773,7 +784,7 @@ class DauphinDash {
             weights.push(dayData?.weight || null);
         }
 
-        new Chart(ctx, {
+        this.charts.weight = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: dates,
@@ -819,6 +830,11 @@ class DauphinDash {
         const ctx = document.getElementById('leetcode-chart');
         if (!ctx) return;
 
+        // Destroy existing chart if it exists
+        if (this.charts.leetcode) {
+            this.charts.leetcode.destroy();
+        }
+
         // Get cumulative LeetCode progress over last 30 days
         const dates = [];
         const cumulative = [];
@@ -836,7 +852,7 @@ class DauphinDash {
             cumulative.push(total);
         }
 
-        new Chart(ctx, {
+        this.charts.leetcode = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: dates,
@@ -879,6 +895,11 @@ class DauphinDash {
         const ctx = document.getElementById('workout-chart');
         if (!ctx) return;
 
+        // Destroy existing chart if it exists
+        if (this.charts.workout) {
+            this.charts.workout.destroy();
+        }
+
         // Get workouts per week for the last several weeks
         const weekLabels = [];
         const workoutsPerWeek = [];
@@ -907,7 +928,7 @@ class DauphinDash {
             workoutsPerWeek.push(workoutCount);
         }
 
-        new Chart(ctx, {
+        this.charts.workout = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: weekLabels,

@@ -791,8 +791,8 @@ class DauphinDash {
                 datasets: [{
                     label: 'Weight (lbs)',
                     data: weights,
-                    borderColor: '#4299e1',
-                    backgroundColor: 'rgba(66, 153, 225, 0.1)',
+                    borderColor: '#ae9142',
+                    backgroundColor: 'rgba(174, 145, 66, 0.1)',
                     tension: 0.4,
                     fill: true,
                     spanGaps: true
@@ -859,8 +859,8 @@ class DauphinDash {
                 datasets: [{
                     label: 'Total Problems',
                     data: cumulative,
-                    borderColor: '#48bb78',
-                    backgroundColor: 'rgba(72, 187, 120, 0.1)',
+                    borderColor: '#0a843d',
+                    backgroundColor: 'rgba(10, 132, 61, 0.1)',
                     tension: 0.4,
                     fill: true
                 }]
@@ -935,8 +935,8 @@ class DauphinDash {
                 datasets: [{
                     label: 'Workouts per Week',
                     data: workoutsPerWeek,
-                    borderColor: '#ed8936',
-                    backgroundColor: 'rgba(237, 137, 54, 0.1)',
+                    borderColor: '#d39f10',
+                    backgroundColor: 'rgba(211, 159, 16, 0.1)',
                     tension: 0.4,
                     fill: true
                 }]

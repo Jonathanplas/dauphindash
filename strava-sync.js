@@ -15,11 +15,19 @@ class StravaSync {
             const session = await this.supabaseSync.getSession();
             if (!session) return false;
 
-            const response = await this.supabaseSync.client.functions.invoke('strava-sync', {
-                body: { action: 'status' }
+            const url = `${this.supabaseSync.supabaseUrl}/functions/v1/strava-sync?action=status`;
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${session.access_token}`,
+                    'Content-Type': 'application/json',
+                }
             });
 
-            if (response.data?.connected) {
+            const data = await response.json();
+
+            if (response.ok && data.connected) {
                 this.connected = true;
                 return true;
             }
@@ -67,20 +75,42 @@ class StravaSync {
                 if (event.data.type === 'strava-oauth-success') {
                     popup?.close();
                     
-                    // Call edge function with the code
+                    // Call edge function with the code as query parameter
                     try {
-                        const response = await this.supabaseSync.client.functions.invoke('strava-sync', {
-                            body: { action: 'callback', code: event.data.code }
+                        const session = await this.supabaseSync.getSession();
+                        if (!session) {
+                            reject(new Error('Not authenticated with Supabase'));
+                            return;
+                        }
+
+                        const url = `${this.supabaseSync.supabaseUrl}/functions/v1/strava-sync?action=callback&code=${encodeURIComponent(event.data.code)}`;
+                        
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${session.access_token}`,
+                                'Content-Type': 'application/json',
+                            }
                         });
 
-                        if (response.data?.success) {
+                        const data = await response.json();
+                        console.log('Strava Edge Function Response:', data);
+
+                        if (!response.ok) {
+                            console.error('Edge Function Error:', data);
+                            reject(new Error(data.error || 'Failed to connect to Strava'));
+                            return;
+                        }
+
+                        if (data.success) {
                             this.connected = true;
                             await this.loadActivities();
-                            resolve(response.data);
+                            resolve(data);
                         } else {
-                            reject(new Error('Failed to connect to Strava'));
+                            reject(new Error(data.error || 'Failed to connect to Strava'));
                         }
                     } catch (error) {
+                        console.error('Exception calling Edge Function:', error);
                         reject(error);
                     }
                 }
@@ -105,15 +135,28 @@ class StravaSync {
         this.loading = true;
         
         try {
-            const response = await this.supabaseSync.client.functions.invoke('strava-sync', {
-                body: { action: 'sync' }
+            const session = await this.supabaseSync.getSession();
+            if (!session) {
+                throw new Error('Not authenticated with Supabase');
+            }
+
+            const url = `${this.supabaseSync.supabaseUrl}/functions/v1/strava-sync?action=sync`;
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${session.access_token}`,
+                    'Content-Type': 'application/json',
+                }
             });
 
-            if (response.data?.success) {
+            const data = await response.json();
+
+            if (response.ok && data.success) {
                 await this.loadActivities();
-                return response.data;
+                return data;
             } else {
-                throw new Error(response.error?.message || 'Failed to sync activities');
+                throw new Error(data.error || 'Failed to sync activities');
             }
         } finally {
             this.loading = false;
@@ -153,11 +196,22 @@ class StravaSync {
         if (!this.supabaseSync.client) return;
 
         try {
-            const response = await this.supabaseSync.client.functions.invoke('strava-sync', {
-                body: { action: 'disconnect' }
+            const session = await this.supabaseSync.getSession();
+            if (!session) return false;
+
+            const url = `${this.supabaseSync.supabaseUrl}/functions/v1/strava-sync?action=disconnect`;
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${session.access_token}`,
+                    'Content-Type': 'application/json',
+                }
             });
 
-            if (response.data?.success) {
+            const data = await response.json();
+
+            if (response.ok && data.success) {
                 this.connected = false;
                 this.stravaData = null;
                 return true;

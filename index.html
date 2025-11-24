@@ -40,6 +40,9 @@
                             <span class="legend-color workout"></span>
                             <span>Workout completed</span>
                         </div>
+                        <div class="legend-item" id="strava-legend-note" style="display: none; font-size: 0.85rem; color: #718096; font-style: italic;">
+                            <span>🏃 Auto-synced from Strava</span>
+                        </div>
                     </div>
                     <div id="contribution-graph"></div>
                 </div>
@@ -60,6 +63,7 @@
                     <h3>Workouts</h3>
                     <div class="stat-value" id="workout-streak">0</div>
                     <div class="stat-change" id="workout-this-week">0 this week</div>
+                    <div class="stat-note" id="strava-note" style="display: none; margin-top: 8px; font-size: 0.85rem; color: #FC4C02;">Includes Strava runs</div>
                 </div>
             </div>
 
@@ -75,6 +79,44 @@
                 <div class="graph-card">
                     <h3>Workouts per Week</h3>
                     <canvas id="workout-chart"></canvas>
+                </div>
+                <div class="graph-card" id="strava-chart-card" style="display: none;">
+                    <h3>Running Distance (Weekly)</h3>
+                    <canvas id="strava-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="strava-section" id="strava-section">
+                <h2>🏃 Strava Integration</h2>
+                <div id="strava-disconnected" class="strava-connect-box">
+                    <p>Connect your Strava account to automatically sync your running data.</p>
+                    <button id="connect-strava-btn" class="strava-connect-btn">Connect with Strava</button>
+                    <p class="strava-note">You'll need to set up your Strava API credentials first. See the <a href="#" id="strava-setup-link">setup guide</a>.</p>
+                </div>
+                <div id="strava-connected" class="strava-info-box" style="display: none;">
+                    <div class="strava-status">
+                        <span class="strava-connected-badge">✓ Connected to Strava</span>
+                        <button id="sync-strava-btn" class="sync-btn">Sync Now</button>
+                        <button id="disconnect-strava-btn" class="disconnect-btn">Disconnect</button>
+                    </div>
+                    <div class="strava-stats" id="strava-detailed-stats">
+                        <div class="strava-stat">
+                            <span class="label">Total Distance:</span>
+                            <span class="value" id="strava-total-distance">--</span>
+                        </div>
+                        <div class="strava-stat">
+                            <span class="label">Average Pace:</span>
+                            <span class="value" id="strava-avg-pace">--</span>
+                        </div>
+                        <div class="strava-stat">
+                            <span class="label">This Month:</span>
+                            <span class="value" id="strava-month-distance">--</span>
+                        </div>
+                        <div class="strava-stat">
+                            <span class="label">Longest Run:</span>
+                            <span class="value" id="strava-longest-run">--</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -186,6 +228,7 @@
     </div>
 
     <script src="supabase-sync.js"></script>
+    <script src="strava-sync.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

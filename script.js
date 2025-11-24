@@ -4,11 +4,13 @@ class DauphinDash {
         this.currentQuarter = Math.floor(new Date().getMonth() / 3);
         this.currentYear = new Date().getFullYear();
         this.supabaseSync = new SupabaseSync();
+        this.stravaSync = new StravaSync(this.supabaseSync);
         // Store chart instances to prevent duplication
         this.charts = {
             weight: null,
             leetcode: null,
-            workout: null
+            workout: null,
+            strava: null
         };
         this.init();
     }
@@ -19,6 +21,7 @@ class DauphinDash {
         this.renderCharts();
         this.setupEventListeners();
         await this.initSupabaseSync();
+        await this.initStravaSync();
     }
 
     async initSupabaseSync() {
@@ -35,6 +38,44 @@ class DauphinDash {
                 console.log('✅ Loaded data from Supabase');
             }
         }
+    }
+
+    async initStravaSync() {
+        // Check if Strava is connected and load data
+        const connected = await this.stravaSync.checkConnection();
+        if (connected) {
+            await this.stravaSync.loadActivities();
+            this.mergeStravaWorkouts();
+            this.updateStravaUI(true);
+            this.renderStravaStats();
+            this.renderStravaChart();
+            // Re-render stats and graph with merged data
+            this.renderStats();
+            this.renderContributionGraph();
+        }
+    }
+
+    // Merge Strava runs into workout data
+    mergeStravaWorkouts() {
+        if (!this.stravaSync.stravaData) return;
+
+        const runs = this.stravaSync.stravaData.filter(a => a.type === 'Run');
+        
+        runs.forEach(run => {
+            const runDate = new Date(run.start_date_local);
+            const dateKey = this.getDateKey(runDate);
+            
+            // Create entry if doesn't exist
+            if (!this.data[dateKey]) {
+                this.data[dateKey] = { weight: null, leetcode: 0, workout: false };
+            }
+            
+            // Mark as workout if there's a run
+            this.data[dateKey].workout = true;
+        });
+        
+        // Save merged data
+        this.saveData();
     }
 
     loadData() {
@@ -110,7 +151,7 @@ class DauphinDash {
             .reduce((sum, [, day]) => sum + (day.leetcode || 0), 0);
         document.getElementById('leetcode-this-week').textContent = `${thisWeekLeetcode} this week`;
 
-        // Update workout stats
+        // Update workout stats (includes Strava runs)
         const workoutStreak = this.calculateWorkoutStreak();
         document.getElementById('workout-streak').textContent = workoutStreak;
         
@@ -360,6 +401,9 @@ class DauphinDash {
         
         // Supabase sync event listeners
         this.setupSupabaseSyncListeners();
+        
+        // Strava sync event listeners
+        this.setupStravaSyncListeners();
     }
 
     setupSupabaseSyncListeners() {
@@ -965,6 +1009,178 @@ class DauphinDash {
                 }
             }
         });
+    }
+
+    // Strava Integration Methods
+    updateStravaUI(connected) {
+        const disconnectedBox = document.getElementById('strava-disconnected');
+        const connectedBox = document.getElementById('strava-connected');
+        const chartCard = document.getElementById('strava-chart-card');
+        const stravaNote = document.getElementById('strava-note');
+        const stravaLegendNote = document.getElementById('strava-legend-note');
+
+        if (connected) {
+            disconnectedBox.style.display = 'none';
+            connectedBox.style.display = 'block';
+            chartCard.style.display = 'block';
+            if (stravaNote) stravaNote.style.display = 'block';
+            if (stravaLegendNote) stravaLegendNote.style.display = 'block';
+        } else {
+            disconnectedBox.style.display = 'block';
+            connectedBox.style.display = 'none';
+            chartCard.style.display = 'none';
+            if (stravaNote) stravaNote.style.display = 'none';
+            if (stravaLegendNote) stravaLegendNote.style.display = 'none';
+        }
+    }
+
+    renderStravaStats() {
+        const stats = this.stravaSync.getRunningStats();
+        
+        if (!stats) {
+            console.log('No Strava data available');
+            return;
+        }
+
+        // Update stat card
+        document.getElementById('strava-total-runs').textContent = stats.totalRuns;
+        document.getElementById('strava-this-week').textContent = `${stats.thisWeekRuns} this week`;
+
+        // Update detailed stats
+        const useMiles = localStorage.getItem('strava-units') === 'miles';
+        document.getElementById('strava-total-distance').textContent = 
+            useMiles ? `${stats.totalDistanceMiles} mi` : `${stats.totalDistanceKm} km`;
+        document.getElementById('strava-avg-pace').textContent = 
+            useMiles ? `${stats.avgPaceMinPerMile}/mi` : `${stats.avgPaceMinPerKm}/km`;
+        document.getElementById('strava-month-distance').textContent = 
+            useMiles ? `${stats.thisMonthDistanceMiles} mi` : `${stats.thisMonthDistanceKm} km`;
+        document.getElementById('strava-longest-run').textContent = 
+            useMiles ? `${stats.longestRunMiles.toFixed(1)} mi` : `${stats.longestRunKm.toFixed(1)} km`;
+    }
+
+    renderStravaChart() {
+        const weeklyData = this.stravaSync.getWeeklyData(12);
+        
+        if (!weeklyData) {
+            console.log('No Strava weekly data available');
+            return;
+        }
+
+        const canvas = document.getElementById('strava-chart');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Destroy existing chart if it exists
+        if (this.charts.strava) {
+            this.charts.strava.destroy();
+        }
+
+        const useMiles = localStorage.getItem('strava-units') === 'miles';
+        const distanceData = weeklyData.map(w => useMiles ? w.distanceMiles : w.distanceKm);
+
+        this.charts.strava = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: weeklyData.map(w => w.week),
+                datasets: [{
+                    label: useMiles ? 'Miles' : 'Kilometers',
+                    data: distanceData,
+                    backgroundColor: '#FC4C02',
+                    borderColor: '#FC4C02',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: useMiles ? 'Distance (miles)' : 'Distance (km)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    setupStravaSyncListeners() {
+        const connectBtn = document.getElementById('connect-strava-btn');
+        const syncBtn = document.getElementById('sync-strava-btn');
+        const disconnectBtn = document.getElementById('disconnect-strava-btn');
+
+        if (connectBtn) {
+            connectBtn.addEventListener('click', async () => {
+                try {
+                    await this.stravaSync.connect();
+                    this.mergeStravaWorkouts();
+                    this.updateStravaUI(true);
+                    this.renderStravaStats();
+                    this.renderStravaChart();
+                    this.renderStats();
+                    this.renderContributionGraph();
+                    alert('Successfully connected to Strava! Your runs have been added to your workout tracking.');
+                } catch (error) {
+                    console.error('Error connecting to Strava:', error);
+                    alert('Failed to connect to Strava. Please check your setup and try again.');
+                }
+            });
+        }
+
+        if (syncBtn) {
+            syncBtn.addEventListener('click', async () => {
+                syncBtn.disabled = true;
+                syncBtn.textContent = 'Syncing...';
+                
+                try {
+                    const result = await this.stravaSync.syncActivities();
+                    this.mergeStravaWorkouts();
+                    this.renderStravaStats();
+                    this.renderStravaChart();
+                    this.renderStats();
+                    this.renderContributionGraph();
+                    alert(`Synced ${result.count} activities from Strava! Workouts updated on contribution graph.`);
+                } catch (error) {
+                    console.error('Error syncing Strava:', error);
+                    alert('Failed to sync Strava data: ' + error.message);
+                } finally {
+                    syncBtn.disabled = false;
+                    syncBtn.textContent = 'Sync Now';
+                }
+            });
+        }
+
+        if (disconnectBtn) {
+            disconnectBtn.addEventListener('click', async () => {
+                if (confirm('Are you sure you want to disconnect Strava? This will remove Strava runs from your workout tracking.')) {
+                    try {
+                        await this.stravaSync.disconnect();
+                        this.updateStravaUI(false);
+                        // Note: We don't remove workout flags as user might have manually tracked some
+                        // If you want to remove only Strava-sourced workouts, additional tracking would be needed
+                        alert('Disconnected from Strava');
+                    } catch (error) {
+                        console.error('Error disconnecting Strava:', error);
+                        alert('Failed to disconnect Strava');
+                    }
+                }
+            });
+        }
     }
 }
 

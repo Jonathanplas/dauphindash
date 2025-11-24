@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strava OAuth Callback</title>
+</head>
+<body>
+    <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+        <h2>Connecting to Strava...</h2>
+        <p>Please wait while we complete the authorization.</p>
+    </div>
+    
+    <script>
+        // Extract authorization code from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const error = urlParams.get('error');
+        
+        if (error) {
+            // User denied authorization
+            window.opener?.postMessage({ type: 'strava-oauth-error', error }, '*');
+            window.close();
+        } else if (code) {
+            // Send code back to parent window
+            window.opener?.postMessage({ type: 'strava-oauth-success', code }, '*');
+            
+            // Show success message briefly before closing
+            document.body.innerHTML = `
+                <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+                    <h2>✅ Authorization Successful</h2>
+                    <p>You can close this window.</p>
+                </div>
+            `;
+            
+            setTimeout(() => window.close(), 2000);
+        } else {
+            // No code or error found
+            window.opener?.postMessage({ type: 'strava-oauth-error', error: 'No authorization code received' }, '*');
+            window.close();
+        }
+    </script>
+</body>
+</html>

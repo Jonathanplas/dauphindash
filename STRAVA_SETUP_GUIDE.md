@@ -99,19 +99,27 @@ You should see `strava-sync` in the list with status "ACTIVE".
 
 ## Step 4: Configure Your Dashboard
 
-### Set Strava Client ID in Dashboard
+### Add Your Strava Client ID to Code
 
-1. Open your DauphinDash in a browser
-2. Open the browser console (F12 or Cmd+Option+I)
-3. Run this command (replace with your Client ID):
+1. Open the file `strava-sync.js` in your project
+2. Find this line near the top:
+   ```javascript
+   const STRAVA_CLIENT_ID = 'YOUR_STRAVA_CLIENT_ID_HERE';
+   ```
+3. Replace `YOUR_STRAVA_CLIENT_ID_HERE` with your actual Client ID from Step 1
+4. Save the file
+5. Commit and push to GitHub:
+   ```bash
+   git add strava-sync.js
+   git commit -m "Add Strava Client ID"
+   git push origin main
+   ```
 
-```javascript
-localStorage.setItem('strava-client-id', 'YOUR_CLIENT_ID_HERE');
-```
+**Note**: The Client ID is public and safe to commit to GitHub. Only the Client Secret must be kept private (which is stored securely in Supabase).
 
 ### Set Distance Units (Optional)
 
-Choose between miles or kilometers:
+Choose between miles or kilometers by opening your dashboard in a browser, opening the console (F12), and running:
 
 ```javascript
 // For miles

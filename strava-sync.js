@@ -1,6 +1,4 @@
-// Strava Integration for DauphinDash Client
-// Handles Strava OAuth flow and data fetching via Supabase Edge Function
-
+const STRAVA_CLIENT_ID = '186791'; 
 class StravaSync {
     constructor(supabaseSync) {
         this.supabaseSync = supabaseSync;
@@ -34,11 +32,13 @@ class StravaSync {
 
     // Start OAuth flow to connect Strava
     async connect() {
-        // Strava OAuth URL - user needs to set their client ID
-        const clientId = localStorage.getItem('strava-client-id');
+        // Use configured client ID or fall back to localStorage
+        const clientId = STRAVA_CLIENT_ID !== 'YOUR_STRAVA_CLIENT_ID_HERE' 
+            ? STRAVA_CLIENT_ID 
+            : localStorage.getItem('strava-client-id');
         
-        if (!clientId) {
-            alert('Please set your Strava Client ID first. See the Strava Setup Guide.');
+        if (!clientId || clientId === 'YOUR_STRAVA_CLIENT_ID_HERE') {
+            alert('Please set your Strava Client ID in strava-sync.js. See the Strava Setup Guide.');
             return;
         }
 

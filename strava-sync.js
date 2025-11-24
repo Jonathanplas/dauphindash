@@ -97,8 +97,10 @@ class StravaSync {
                         console.log('Strava Edge Function Response:', data);
 
                         if (!response.ok) {
-                            console.error('Edge Function Error:', data);
-                            reject(new Error(data.error || 'Failed to connect to Strava'));
+                            const errorMsg = data.error || 'Failed to connect to Strava';
+                            console.error('Edge Function Error:', errorMsg);
+                            alert(`Strava Error: ${errorMsg}`);
+                            reject(new Error(errorMsg));
                             return;
                         }
 

@@ -42,7 +42,9 @@ class StravaSync {
             return;
         }
 
-        const redirectUri = `${window.location.origin}/strava-callback.html`;
+        // Construct the correct redirect URI based on current URL
+        const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '');
+        const redirectUri = `${baseUrl}/strava-callback.html`;
         const scope = 'read,activity:read_all';
         
         const authUrl = `https://www.strava.com/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&approval_prompt=force&scope=${scope}`;

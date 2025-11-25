@@ -6,13 +6,14 @@ class DauphinDash {
         this.supabaseSync = new SupabaseSync();
         this.stravaSync = new StravaSync(this.supabaseSync);
         this.stravaMap = null; // Leaflet map instance
-        // Store chart instances to prevent duplication
-        this.charts = {
-            weight: null,
-            leetcode: null,
-            workout: null,
-            strava: null
-        };
+        
+        // Initialize modular components
+        this.statsCalculator = new StatsCalculator(this.data);
+        this.chartRenderer = new ChartRenderer();
+        this.weatherFetcher = new WeatherFetcher();
+        
+        // Store Strava chart separately
+        this.charts = { strava: null };
         this.init();
     }
 
@@ -21,7 +22,7 @@ class DauphinDash {
         this.renderContributionGraph();
         this.renderCharts();
         this.setupEventListeners();
-        this.fetchWeather(); // Add weather fetching
+        this.weatherFetcher.fetch();
         await this.initSupabaseSync();
         await this.initStravaSync();
     }
@@ -33,6 +34,7 @@ class DauphinDash {
             if (supabaseData) {
                 // Merge Supabase data with local data (Supabase takes precedence)
                 this.data = { ...this.data, ...supabaseData };
+                this.statsCalculator = new StatsCalculator(this.data);
                 this.saveData();
                 this.renderStats();
                 this.renderContributionGraph();
@@ -782,9 +784,7 @@ class DauphinDash {
     }
 
     renderCharts() {
-        this.renderWeightChart();
-        this.renderLeetCodeChart();
-        this.renderWorkoutChart();
+        this.chartRenderer.renderAll(this.data);
     }
 
     renderWeightChart() {
@@ -1156,10 +1156,8 @@ class DauphinDash {
     }
 
     renderStravaChart() {
-        const weeklyData = this.stravaSync.getWeeklyData(12);
-        
-        if (!weeklyData) {
-            console.log('No Strava weekly data available');
+        if (!this.stravaSync.stravaData || this.stravaSync.stravaData.length === 0) {
+            console.log('No Strava data available');
             return;
         }
 
@@ -1174,19 +1172,54 @@ class DauphinDash {
             this.charts.strava.destroy();
         }
 
-        const useMiles = localStorage.getItem('strava-units') === 'miles';
-        const distanceData = weeklyData.map(w => useMiles ? w.distanceMiles : w.distanceKm);
+        // Calculate weighted average power for each week (last 12 weeks)
+        const today = new Date();
+        const weeklyPowerData = [];
+        
+        for (let weekOffset = 11; weekOffset >= 0; weekOffset--) {
+            const weekEnd = new Date(today);
+            weekEnd.setDate(today.getDate() - (weekOffset * 7));
+            const weekStart = new Date(weekEnd);
+            weekStart.setDate(weekEnd.getDate() - 6);
+            
+            // Get runs in this week
+            const runsThisWeek = this.stravaSync.stravaData.filter(activity => {
+                if (activity.type !== 'Run') return false;
+                const activityDate = new Date(activity.start_date_local);
+                return activityDate >= weekStart && activityDate <= weekEnd;
+            });
+            
+            // Calculate weighted average power
+            let totalWeightedPower = 0;
+            let totalDistance = 0;
+            
+            runsThisWeek.forEach(run => {
+                const distance = run.distance / 1000; // km
+                const power = run.average_watts || this.estimatePower(run);
+                totalWeightedPower += power * distance;
+                totalDistance += distance;
+            });
+            
+            const avgPower = totalDistance > 0 ? totalWeightedPower / totalDistance : 0;
+            
+            weeklyPowerData.push({
+                week: weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                power: Math.round(avgPower)
+            });
+        }
 
         this.charts.strava = new Chart(ctx, {
-            type: 'bar',
+            type: 'line',
             data: {
-                labels: weeklyData.map(w => w.week),
+                labels: weeklyPowerData.map(w => w.week),
                 datasets: [{
-                    label: useMiles ? 'Miles' : 'Kilometers',
-                    data: distanceData,
-                    backgroundColor: '#FC4C02',
+                    label: 'Power (watts)',
+                    data: weeklyPowerData.map(w => w.power),
+                    backgroundColor: 'rgba(252, 76, 2, 0.1)',
                     borderColor: '#FC4C02',
-                    borderWidth: 1
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
                 }]
             },
             options: {
@@ -1202,7 +1235,7 @@ class DauphinDash {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: useMiles ? 'Distance (miles)' : 'Distance (km)'
+                            text: 'Weighted Avg Power (W)'
                         }
                     },
                     x: {
@@ -1214,6 +1247,17 @@ class DauphinDash {
                 }
             }
         });
+    }
+
+    // Estimate power if not provided by Strava
+    estimatePower(run) {
+        // Simple estimation: Power ≈ (weight in kg) × (speed in m/s) × grade factor
+        // Using average values for estimation
+        const avgWeightKg = 75; // Assume 75kg runner
+        const speedMs = run.average_speed; // m/s
+        const gradeFactor = 1.1; // Account for elevation
+        
+        return avgWeightKg * speedMs * gradeFactor * 9.8; // Include gravity constant
     }
 
     setupStravaSyncListeners() {
@@ -1278,77 +1322,6 @@ class DauphinDash {
                 }
             });
         }
-    }
-
-    // Weather fetching
-    async fetchWeather() {
-        const weatherIcon = document.getElementById('weather-icon');
-        const weatherTemp = document.getElementById('weather-temp');
-        const weatherDesc = document.getElementById('weather-desc');
-        const feelsLike = document.getElementById('feels-like');
-        const humidity = document.getElementById('humidity');
-
-        try {
-            // Using Open-Meteo API (no API key required)
-            // Default location: South Bend, IN (Notre Dame)
-            const latitude = 41.7037;
-            const longitude = -86.2379;
-            
-            const response = await fetch(
-                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch`
-            );
-            
-            if (!response.ok) throw new Error('Weather fetch failed');
-            
-            const data = await response.json();
-            const current = data.current;
-            
-            // Update temperature
-            weatherTemp.textContent = `${Math.round(current.temperature_2m)}°F`;
-            feelsLike.textContent = `${Math.round(current.apparent_temperature)}°F`;
-            humidity.textContent = `${current.relative_humidity_2m}%`;
-            
-            // Weather code to icon and description mapping
-            const weatherInfo = this.getWeatherInfo(current.weather_code);
-            weatherIcon.textContent = weatherInfo.icon;
-            weatherDesc.textContent = weatherInfo.description;
-            
-        } catch (error) {
-            console.error('Error fetching weather:', error);
-            weatherDesc.textContent = 'Unable to load';
-        }
-    }
-
-    getWeatherInfo(code) {
-        // WMO Weather interpretation codes
-        const weatherCodes = {
-            0: { icon: '☀️', description: 'Clear sky' },
-            1: { icon: '🌤️', description: 'Mainly clear' },
-            2: { icon: '⛅', description: 'Partly cloudy' },
-            3: { icon: '☁️', description: 'Overcast' },
-            45: { icon: '🌫️', description: 'Foggy' },
-            48: { icon: '🌫️', description: 'Foggy' },
-            51: { icon: '🌦️', description: 'Light drizzle' },
-            53: { icon: '🌦️', description: 'Drizzle' },
-            55: { icon: '🌧️', description: 'Heavy drizzle' },
-            61: { icon: '🌧️', description: 'Light rain' },
-            63: { icon: '🌧️', description: 'Rain' },
-            65: { icon: '🌧️', description: 'Heavy rain' },
-            71: { icon: '🌨️', description: 'Light snow' },
-            73: { icon: '🌨️', description: 'Snow' },
-            75: { icon: '🌨️', description: 'Heavy snow' },
-            77: { icon: '🌨️', description: 'Snow grains' },
-            80: { icon: '🌦️', description: 'Light showers' },
-            81: { icon: '🌦️', description: 'Showers' },
-            82: { icon: '⛈️', description: 'Heavy showers' },
-            85: { icon: '🌨️', description: 'Snow showers' },
-            86: { icon: '🌨️', description: 'Heavy snow showers' },
-            95: { icon: '⛈️', description: 'Thunderstorm' },
-            96: { icon: '⛈️', description: 'Thunderstorm with hail' },
-            99: { icon: '⛈️', description: 'Severe thunderstorm' }
-        };
-        
-        return weatherCodes[code] || { icon: '🌤️', description: 'Unknown' };
     }
 }
 

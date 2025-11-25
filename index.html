@@ -79,7 +79,7 @@
                     <canvas id="workout-chart"></canvas>
                 </div>
                 <div class="graph-card" id="strava-chart-card" style="display: none;">
-                    <h3>Running Distance (Weekly)</h3>
+                    <h3>Running Power (Weighted Avg)</h3>
                     <canvas id="strava-chart"></canvas>
                 </div>
                 
@@ -96,15 +96,8 @@
                         <div class="weather-icon" id="weather-icon">🌤️</div>
                         <div class="weather-temp" id="weather-temp">--°F</div>
                         <div class="weather-desc" id="weather-desc">Loading...</div>
-                        <div class="weather-details">
-                            <div class="weather-detail">
-                                <span class="weather-label">Feels Like:</span>
-                                <span class="weather-value" id="feels-like">--°F</span>
-                            </div>
-                            <div class="weather-detail">
-                                <span class="weather-label">Humidity:</span>
-                                <span class="weather-value" id="humidity">--%</span>
-                            </div>
+                        <div class="rain-timeline" id="rain-timeline">
+                            <!-- Hourly rain probability will be rendered here -->
                         </div>
                     </div>
                 </div>
@@ -251,6 +244,9 @@
     </div>
 
     <script src="contribution-graph.js"></script>
+    <script src="js/stats-calculator.js"></script>
+    <script src="js/chart-renderer.js"></script>
+    <script src="js/weather-fetcher.js"></script>
     <script src="supabase-sync.js"></script>
     <script src="strava-sync.js"></script>
     <script src="script.js"></script>

@@ -1057,6 +1057,65 @@ class DauphinDash {
             useMiles ? `${stats.thisMonthDistanceMiles} mi` : `${stats.thisMonthDistanceKm} km`;
         document.getElementById('strava-longest-run').textContent = 
             useMiles ? `${stats.longestRunMiles.toFixed(1)} mi` : `${stats.longestRunKm.toFixed(1)} km`;
+        
+        // Render latest run map
+        this.renderLatestRunMap();
+    }
+
+    renderLatestRunMap() {
+        if (!this.stravaSync.stravaData || this.stravaSync.stravaData.length === 0) {
+            return;
+        }
+
+        // Get the most recent run with a map
+        const runs = this.stravaSync.stravaData
+            .filter(a => a.type === 'Run' && a.map && a.map.summary_polyline)
+            .sort((a, b) => new Date(b.start_date_local) - new Date(a.start_date_local));
+
+        if (runs.length === 0) {
+            return;
+        }
+
+        const latestRun = runs[0];
+        const mapCard = document.getElementById('strava-map-card');
+        const mapImage = document.getElementById('strava-map-image');
+        
+        if (!mapCard || !mapImage) {
+            return;
+        }
+
+        // Show the map card
+        mapCard.style.display = 'block';
+
+        // Generate Static Map URL using Google Maps API (no key needed for basic use)
+        const polyline = latestRun.map.summary_polyline;
+        const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?size=600x300&path=weight:3|color:0xFC4C02|enc:${encodeURIComponent(polyline)}&maptype=roadmap&key=AIzaSyDummyKeyForDisplay`;
+        
+        // Alternative: Use Mapbox static API (requires free API key)
+        // const mapboxUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/path-5+FC4C02(${encodeURIComponent(polyline)})/auto/600x300?access_token=YOUR_MAPBOX_TOKEN`;
+        
+        mapImage.src = mapUrl;
+
+        // Update latest run stats
+        const useMiles = localStorage.getItem('strava-units') === 'miles';
+        const distance = latestRun.distance / 1000; // convert to km
+        const distanceMiles = distance * 0.621371;
+        const paceMinPerKm = (latestRun.moving_time / 60) / distance;
+        const paceMinPerMile = paceMinPerKm / 0.621371;
+
+        document.getElementById('latest-run-distance').textContent = 
+            useMiles ? `${distanceMiles.toFixed(2)} mi` : `${distance.toFixed(2)} km`;
+        
+        document.getElementById('latest-run-pace').textContent = 
+            useMiles ? `${Math.floor(paceMinPerMile)}:${String(Math.floor((paceMinPerMile % 1) * 60)).padStart(2, '0')}/mi` 
+                     : `${Math.floor(paceMinPerKm)}:${String(Math.floor((paceMinPerKm % 1) * 60)).padStart(2, '0')}/km`;
+        
+        document.getElementById('latest-run-calories').textContent = 
+            latestRun.calories ? `${Math.round(latestRun.calories)} kcal` : '--';
+        
+        const runDate = new Date(latestRun.start_date_local);
+        document.getElementById('latest-run-date').textContent = 
+            runDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
     renderStravaChart() {

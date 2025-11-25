@@ -84,13 +84,16 @@ class ChartRenderer {
         }
 
         this.charts.leetcode = new Chart(canvas, {
-            type: 'bar',
+            type: 'line',
             data: {
                 labels: weeks,
                 datasets: [{
                     label: 'Problems Solved',
                     data: counts,
-                    backgroundColor: '#1c4f8f',
+                    borderColor: '#1c4f8f',
+                    backgroundColor: 'rgba(28, 79, 143, 0.1)',
+                    tension: 0.4,
+                    fill: true
                 }]
             },
             options: {
@@ -142,13 +145,16 @@ class ChartRenderer {
         }
 
         this.charts.workout = new Chart(canvas, {
-            type: 'bar',
+            type: 'line',
             data: {
                 labels: weeks,
                 datasets: [{
                     label: 'Workouts',
                     data: counts,
-                    backgroundColor: '#ae9142',
+                    borderColor: '#ae9142',
+                    backgroundColor: 'rgba(174, 145, 66, 0.1)',
+                    tension: 0.4,
+                    fill: true
                 }]
             },
             options: {

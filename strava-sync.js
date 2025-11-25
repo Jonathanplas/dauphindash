@@ -1,4 +1,4 @@
-const STRAVA_CLIENT_ID = '186791'; 
+const STRAVA_CLIENT_ID = '187014'; 
 class StravaSync {
     constructor(supabaseSync) {
         this.supabaseSync = supabaseSync;

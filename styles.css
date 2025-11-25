@@ -109,6 +109,12 @@ body {
     font-weight: 500;
 }
 
+.stat-card.needs-data {
+    outline: 3px solid #FC4C02;
+    outline-offset: -3px;
+    box-shadow: 0 0 0 3px rgba(252, 76, 2, 0.1);
+}
+
 .stat-value {
     font-size: 2.5rem;
     font-weight: 700;

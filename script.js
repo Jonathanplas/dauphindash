@@ -116,11 +116,22 @@ class DauphinDash {
         const GOAL_WEIGHT = 160;
         const GOAL_WORKOUTS_PER_WEEK = 5;
         
+        // Get stat card elements for highlighting
+        const weightCard = document.querySelector('.stat-card:nth-child(1)');
+        const leetcodeCard = document.querySelector('.stat-card:nth-child(2)');
+        const workoutCard = document.querySelector('.stat-card:nth-child(3)');
+        
         // Update weight - show most recent weight, not just today's
         const weightElement = document.getElementById('current-weight');
         const weightChangeElement = document.getElementById('weight-change');
         
         const recentWeight = this.getMostRecentWeight();
+        
+        // Highlight weight card if today's weight is missing
+        const hasWeightToday = todayData && todayData.weight !== null && todayData.weight !== undefined;
+        if (weightCard) {
+            weightCard.classList.toggle('needs-data', !hasWeightToday);
+        }
         
         if (recentWeight) {
             weightElement.textContent = `${recentWeight.weight} lbs`;
@@ -149,6 +160,12 @@ class DauphinDash {
             weightChangeElement.style.color = '#718096';
         }
 
+        // Highlight LeetCode card if today's LeetCode is missing or zero
+        const hasLeetcodeToday = todayData && todayData.leetcode > 0;
+        if (leetcodeCard) {
+            leetcodeCard.classList.toggle('needs-data', !hasLeetcodeToday);
+        }
+        
         // Update LeetCode stats
         const leetcodeTotal = Object.values(this.data).reduce((sum, day) => sum + (day.leetcode || 0), 0);
         document.getElementById('leetcode-total').textContent = leetcodeTotal;
@@ -172,6 +189,12 @@ class DauphinDash {
         document.getElementById('leetcode-this-week').innerHTML = `${thisWeekLeetcode} this week ${leetcodeTrend.indicator}`;
         document.getElementById('leetcode-this-week').style.color = leetcodeTrend.color;
 
+        // Highlight workout card if today's workout is missing
+        const hasWorkoutToday = todayData && todayData.workout === true;
+        if (workoutCard) {
+            workoutCard.classList.toggle('needs-data', !hasWorkoutToday);
+        }
+        
         // Update workout stats (includes Strava runs)
         const workoutStreak = this.calculateWorkoutStreak();
         document.getElementById('workout-streak').textContent = workoutStreak;

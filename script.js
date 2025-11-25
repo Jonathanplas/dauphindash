@@ -317,172 +317,16 @@ class DauphinDash {
     }
 
     renderContributionGraph() {
-        const graph = document.getElementById('contribution-graph');
-        graph.innerHTML = '';
-
-        const quarterStartMonth = this.currentQuarter * 3;
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-
-        // Create main container
-        const container = document.createElement('div');
-        container.className = 'calendar-container';
-
-        // Create month headers row
-        const monthHeadersRow = document.createElement('div');
-        monthHeadersRow.className = 'month-headers-row';
-        
-        // Empty space for day labels column
-        const emptyHeader = document.createElement('div');
-        emptyHeader.className = 'day-labels-header';
-        monthHeadersRow.appendChild(emptyHeader);
-
-        // Add month name headers
-        for (let i = 0; i < 3; i++) {
-            const monthIndex = quarterStartMonth + i;
-            const monthHeader = document.createElement('div');
-            monthHeader.className = 'month-header';
-            monthHeader.textContent = monthNames[monthIndex];
-            monthHeadersRow.appendChild(monthHeader);
-        }
-        container.appendChild(monthHeadersRow);
-
-        // Create calendar grid (7 rows for days of week)
-        for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
-            const row = document.createElement('div');
-            row.className = 'calendar-row';
-
-            // Add day label
-            const dayLabel = document.createElement('div');
-            dayLabel.className = 'day-label';
-            dayLabel.textContent = dayLabels[dayOfWeek];
-            row.appendChild(dayLabel);
-
-            // Add cells for each month in this row
-            for (let monthOffset = 0; monthOffset < 3; monthOffset++) {
-                const month = quarterStartMonth + monthOffset;
-                const year = this.currentYear;
-                
-                const monthContainer = document.createElement('div');
-                monthContainer.className = 'month-row-cells';
-
-                // Get all dates for this day of week in this month
-                const firstDay = new Date(year, month, 1);
-                const lastDay = new Date(year, month + 1, 0);
-                
-                // Find first occurrence of this day of week in the month
-                let currentDate = new Date(firstDay);
-                while (currentDate.getDay() !== dayOfWeek && currentDate <= lastDay) {
-                    currentDate.setDate(currentDate.getDate() + 1);
-                }
-
-                // Add all occurrences of this day of week
-                while (currentDate <= lastDay) {
-                    const cell = this.createDayCell(currentDate, month, year);
-                    monthContainer.appendChild(cell);
-                    currentDate.setDate(currentDate.getDate() + 7);
-                }
-
-                // Fill remaining slots to maintain alignment (max 6 weeks)
-                const cellsInMonth = monthContainer.children.length;
-                const maxCells = 6; // Maximum weeks in a month
-                for (let j = cellsInMonth; j < maxCells; j++) {
-                    const emptyCell = document.createElement('div');
-                    emptyCell.className = 'day-cell empty-cell';
-                    monthContainer.appendChild(emptyCell);
-                }
-
-                row.appendChild(monthContainer);
-            }
-
-            container.appendChild(row);
-        }
-
-        graph.appendChild(container);
-    }
-
-    createDayCell(date, currentMonth, currentYear) {
-        const cell = document.createElement('div');
-        cell.className = 'day-cell split-dot';
-        
-        const dateKey = this.getDateKey(date);
-        cell.dataset.date = dateKey;
-        
-        const dayData = this.data[dateKey] || {};
-        const isCurrentMonth = date.getMonth() === currentMonth;
-        
-        // Fade out days not in current month
-        if (!isCurrentMonth) {
-            cell.classList.add('other-month');
-        }
-        
-        // Create split dot with activity indicators
-        const hasWeight = dayData.weight !== null && dayData.weight !== undefined;
-        const hasLeetcode = dayData.leetcode > 0;
-        const hasWorkout = dayData.workout === true;
-        
-        const dot = document.createElement('div');
-        dot.className = 'split-dot-inner';
-        
-        // Weight quarter (top-left)
-        const weightQuarter = document.createElement('div');
-        weightQuarter.className = 'dot-quarter weight-quarter';
-        if (hasWeight) weightQuarter.classList.add('active');
-        
-        // Workout quarter (top-right)
-        const workoutQuarter = document.createElement('div');
-        workoutQuarter.className = 'dot-quarter workout-quarter';
-        if (hasWorkout) workoutQuarter.classList.add('active');
-        
-        // LeetCode half (bottom half)
-        const leetcodeHalf = document.createElement('div');
-        leetcodeHalf.className = 'dot-half leetcode-half';
-        if (hasLeetcode) leetcodeHalf.classList.add('active');
-        
-        dot.appendChild(weightQuarter);
-        dot.appendChild(workoutQuarter);
-        dot.appendChild(leetcodeHalf);
-        cell.appendChild(dot);
-
-        // Add tooltip
-        const tooltip = this.createTooltip({ 
-            date: date, 
-            dateKey: dateKey, 
-            data: dayData,
-            isCurrentMonth: isCurrentMonth,
-            month: currentMonth,
-            year: currentYear
+        // Use the new GitHub-style contribution graph
+        const graph = new ContributionGraph('contribution-graph', this.data, {
+            cellSize: 11,
+            cellGap: 3,
+            weightColor: '#0a843d',
+            leetcodeColor: '#1c4f8f',
+            workoutColor: '#ae9142',
+            combinedColor: '#8c4799'
         });
-        cell.appendChild(tooltip);
-        
-        cell.addEventListener('mouseenter', () => {
-            tooltip.classList.add('show');
-        });
-        
-        cell.addEventListener('mouseleave', () => {
-            tooltip.classList.remove('show');
-        });
-
-        return cell;
-    }
-
-    createTooltip(day) {
-        const tooltip = document.createElement('div');
-        tooltip.className = 'tooltip';
-        
-        const dateStr = day.date.toLocaleDateString();
-        const weight = day.data.weight ? `${day.data.weight} lbs` : 'No weight data';
-        const leetcode = day.data.leetcode || 0;
-        const workout = day.data.workout ? 'Yes' : 'No';
-        
-        tooltip.innerHTML = `
-            <div><strong>${dateStr}</strong></div>
-            <div>Weight: ${weight}</div>
-            <div>LeetCode: ${leetcode} problems</div>
-            <div>Workout: ${workout}</div>
-        `;
-        
-        return tooltip;
+        graph.render();
     }
 
     setupEventListeners() {
@@ -516,20 +360,6 @@ class DauphinDash {
                 }
             });
         }
-        
-        // Quarter navigation
-        const prevMonthBtn = document.getElementById('prev-month');
-        const nextMonthBtn = document.getElementById('next-month');
-        
-        if (prevMonthBtn) {
-            prevMonthBtn.addEventListener('click', () => this.navigateQuarter(-1));
-        }
-        
-        if (nextMonthBtn) {
-            nextMonthBtn.addEventListener('click', () => this.navigateQuarter(1));
-        }
-        
-        this.updateQuarterDisplay();
         
         // Supabase sync event listeners
         this.setupSupabaseSyncListeners();

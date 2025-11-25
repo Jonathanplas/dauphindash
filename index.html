@@ -19,29 +19,36 @@
         <div class="dashboard">
             <div class="contribution-graph">
                 <div class="graph-header">
-                    <h2>Progress Overview</h2>
-                    <div class="month-navigation">
-                        <button id="prev-month" class="nav-btn">←</button>
-                        <span id="current-month" class="month-display">December 2024</span>
-                        <button id="next-month" class="nav-btn">→</button>
-                    </div>
+                    <h2>Progress Overview - Last 12 Months</h2>
                 </div>
                 <div class="graph-container">
+                    <div id="contribution-graph"></div>
                     <div class="graph-legend">
+                        <span style="font-size: 11px; color: #666; margin-right: 8px;">Less</span>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background-color: #ebedf0;"></span>
+                        </div>
                         <div class="legend-item">
                             <span class="legend-color weight"></span>
-                            <span>Weight tracked</span>
+                            <span>Weight</span>
                         </div>
                         <div class="legend-item">
                             <span class="legend-color leetcode"></span>
-                            <span>LeetCode solved</span>
+                            <span>LeetCode</span>
                         </div>
                         <div class="legend-item">
                             <span class="legend-color workout"></span>
-                            <span>Workout completed</span>
+                            <span>Workout</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background-color: #8c4799;"></span>
+                            <span>Multiple</span>
+                        </div>
+                        <span style="font-size: 11px; color: #666; margin-left: 8px;">More</span>
+                        <div class="legend-item" id="strava-legend-note" style="display: none; margin-left: 16px; font-size: 0.85rem; color: #FC4C02; font-style: italic;">
+                            🏃 Auto-synced from Strava
                         </div>
                     </div>
-                    <div id="contribution-graph"></div>
                 </div>
             </div>
 
@@ -248,6 +255,7 @@
         </div>
     </div>
 
+    <script src="contribution-graph.js"></script>
     <script src="supabase-sync.js"></script>
     <script src="strava-sync.js"></script>
     <script src="script.js"></script>

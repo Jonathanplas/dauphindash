@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DauphinDash - Personal Progress Dashboard</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -84,8 +86,26 @@
                 <!-- Latest Run Map -->
                 <div class="graph-card" id="strava-map-card" style="display: none;">
                     <h3>Latest Run</h3>
-                    <div class="strava-map-container">
-                        <img id="strava-map-image" src="" alt="Latest run map" class="strava-map">
+                    <div id="strava-map-container" class="strava-map-container"></div>
+                </div>
+                
+                <!-- Weather Card -->
+                <div class="graph-card" id="weather-card">
+                    <h3>Today's Weather</h3>
+                    <div class="weather-container">
+                        <div class="weather-icon" id="weather-icon">🌤️</div>
+                        <div class="weather-temp" id="weather-temp">--°F</div>
+                        <div class="weather-desc" id="weather-desc">Loading...</div>
+                        <div class="weather-details">
+                            <div class="weather-detail">
+                                <span class="weather-label">Feels Like:</span>
+                                <span class="weather-value" id="feels-like">--°F</span>
+                            </div>
+                            <div class="weather-detail">
+                                <span class="weather-label">Humidity:</span>
+                                <span class="weather-value" id="humidity">--%</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

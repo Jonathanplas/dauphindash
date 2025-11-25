@@ -5,6 +5,7 @@ class DauphinDash {
         this.currentYear = new Date().getFullYear();
         this.supabaseSync = new SupabaseSync();
         this.stravaSync = new StravaSync(this.supabaseSync);
+        this.stravaMap = null; // Leaflet map instance
         // Store chart instances to prevent duplication
         this.charts = {
             weight: null,
@@ -20,6 +21,7 @@ class DauphinDash {
         this.renderContributionGraph();
         this.renderCharts();
         this.setupEventListeners();
+        this.fetchWeather(); // Add weather fetching
         await this.initSupabaseSync();
         await this.initStravaSync();
     }
@@ -1063,37 +1065,94 @@ class DauphinDash {
         }
 
         const latestRun = runs[0];
-        const mapCard = document.getElementById('strava-map-card');
-        const mapImage = document.getElementById('strava-map-image');
+        const mapContainer = document.getElementById('strava-map-container');
         
-        if (!mapCard || !mapImage) {
-            console.error('Map elements not found');
+        if (!mapContainer) {
+            console.error('Map container not found');
             return;
         }
 
         console.log('Rendering map for run:', latestRun);
 
-        // Use a static map service that works without authentication
-        // Option 1: OpenStreetMap static map via staticmap.openstreetmap.de
+        // Destroy existing map if any
+        if (this.stravaMap) {
+            this.stravaMap.remove();
+        }
+
+        // Decode polyline and create Leaflet map
         const polyline = latestRun.map.summary_polyline;
+        const coordinates = this.decodePolyline(polyline);
         
-        // Decode polyline to get coordinates for center point
-        // For simplicity, we'll use a static map service that accepts polylines
-        // Using mapbox static API with a demo token (you should get your own free token)
-        const mapUrl = `https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/static/path-3+FC4C02-0.8(${encodeURIComponent(polyline)})/auto/600x400@2x?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw`;
-        
-        console.log('Map URL:', mapUrl);
-        mapImage.src = mapUrl;
-        
-        // Add error handling
-        mapImage.onerror = () => {
-            console.error('Failed to load map image');
-            mapImage.style.backgroundColor = '#edf2f9';
-        };
-        
-        mapImage.onload = () => {
-            console.log('Map image loaded successfully');
-        };
+        if (coordinates.length === 0) {
+            console.error('No coordinates decoded from polyline');
+            return;
+        }
+
+        // Calculate center and bounds
+        const bounds = L.latLngBounds(coordinates);
+        const center = bounds.getCenter();
+
+        // Create map
+        this.stravaMap = L.map('strava-map-container', {
+            center: center,
+            zoom: 13,
+            zoomControl: false,
+            attributionControl: false,
+            dragging: false,
+            scrollWheelZoom: false,
+            doubleClickZoom: false,
+            touchZoom: false
+        });
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19
+        }).addTo(this.stravaMap);
+
+        // Add polyline
+        L.polyline(coordinates, {
+            color: '#FC4C02',
+            weight: 3,
+            opacity: 0.8
+        }).addTo(this.stravaMap);
+
+        // Fit bounds
+        this.stravaMap.fitBounds(bounds, { padding: [20, 20] });
+    }
+
+    // Decode Google Polyline format
+    decodePolyline(encoded) {
+        const coordinates = [];
+        let index = 0;
+        let lat = 0;
+        let lng = 0;
+
+        while (index < encoded.length) {
+            let b;
+            let shift = 0;
+            let result = 0;
+            do {
+                b = encoded.charCodeAt(index++) - 63;
+                result |= (b & 0x1f) << shift;
+                shift += 5;
+            } while (b >= 0x20);
+            const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+            lat += dlat;
+
+            shift = 0;
+            result = 0;
+            do {
+                b = encoded.charCodeAt(index++) - 63;
+                result |= (b & 0x1f) << shift;
+                shift += 5;
+            } while (b >= 0x20);
+            const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+            lng += dlng;
+
+            coordinates.push([lat / 1e5, lng / 1e5]);
+        }
+
+        return coordinates;
     }
 
     renderStravaChart() {
@@ -1219,6 +1278,77 @@ class DauphinDash {
                 }
             });
         }
+    }
+
+    // Weather fetching
+    async fetchWeather() {
+        const weatherIcon = document.getElementById('weather-icon');
+        const weatherTemp = document.getElementById('weather-temp');
+        const weatherDesc = document.getElementById('weather-desc');
+        const feelsLike = document.getElementById('feels-like');
+        const humidity = document.getElementById('humidity');
+
+        try {
+            // Using Open-Meteo API (no API key required)
+            // Default location: South Bend, IN (Notre Dame)
+            const latitude = 41.7037;
+            const longitude = -86.2379;
+            
+            const response = await fetch(
+                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch`
+            );
+            
+            if (!response.ok) throw new Error('Weather fetch failed');
+            
+            const data = await response.json();
+            const current = data.current;
+            
+            // Update temperature
+            weatherTemp.textContent = `${Math.round(current.temperature_2m)}°F`;
+            feelsLike.textContent = `${Math.round(current.apparent_temperature)}°F`;
+            humidity.textContent = `${current.relative_humidity_2m}%`;
+            
+            // Weather code to icon and description mapping
+            const weatherInfo = this.getWeatherInfo(current.weather_code);
+            weatherIcon.textContent = weatherInfo.icon;
+            weatherDesc.textContent = weatherInfo.description;
+            
+        } catch (error) {
+            console.error('Error fetching weather:', error);
+            weatherDesc.textContent = 'Unable to load';
+        }
+    }
+
+    getWeatherInfo(code) {
+        // WMO Weather interpretation codes
+        const weatherCodes = {
+            0: { icon: '☀️', description: 'Clear sky' },
+            1: { icon: '🌤️', description: 'Mainly clear' },
+            2: { icon: '⛅', description: 'Partly cloudy' },
+            3: { icon: '☁️', description: 'Overcast' },
+            45: { icon: '🌫️', description: 'Foggy' },
+            48: { icon: '🌫️', description: 'Foggy' },
+            51: { icon: '🌦️', description: 'Light drizzle' },
+            53: { icon: '🌦️', description: 'Drizzle' },
+            55: { icon: '🌧️', description: 'Heavy drizzle' },
+            61: { icon: '🌧️', description: 'Light rain' },
+            63: { icon: '🌧️', description: 'Rain' },
+            65: { icon: '🌧️', description: 'Heavy rain' },
+            71: { icon: '🌨️', description: 'Light snow' },
+            73: { icon: '🌨️', description: 'Snow' },
+            75: { icon: '🌨️', description: 'Heavy snow' },
+            77: { icon: '🌨️', description: 'Snow grains' },
+            80: { icon: '🌦️', description: 'Light showers' },
+            81: { icon: '🌦️', description: 'Showers' },
+            82: { icon: '⛈️', description: 'Heavy showers' },
+            85: { icon: '🌨️', description: 'Snow showers' },
+            86: { icon: '🌨️', description: 'Heavy snow showers' },
+            95: { icon: '⛈️', description: 'Thunderstorm' },
+            96: { icon: '⛈️', description: 'Thunderstorm with hail' },
+            99: { icon: '⛈️', description: 'Severe thunderstorm' }
+        };
+        
+        return weatherCodes[code] || { icon: '🌤️', description: 'Unknown' };
     }
 }
 

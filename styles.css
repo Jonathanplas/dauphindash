@@ -935,15 +935,58 @@ body {
 .strava-map-container {
     width: 100%;
     height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--light-sky-blue);
 }
 
-.strava-map {
-    width: 100%;
-    height: 100%;
-    border-radius: 8px;
-    object-fit: cover;
-    background: var(--light-sky-blue);
+/* Weather Card Styles */
+.weather-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+}
+
+.weather-icon {
+    font-size: 3.5rem;
+    line-height: 1;
+}
+
+.weather-temp {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--nd-blue);
+}
+
+.weather-desc {
+    font-size: 1rem;
+    color: #666;
+    text-transform: capitalize;
+}
+
+.weather-details {
+    display: flex;
+    gap: 20px;
+    margin-top: 10px;
+}
+
+.weather-detail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.weather-label {
+    font-size: 0.75rem;
+    color: #718096;
+    font-weight: 500;
+}
+
+.weather-value {
+    font-size: 0.95rem;
+    color: var(--nd-blue);
+    font-weight: 600;
 }

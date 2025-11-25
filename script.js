@@ -1042,9 +1042,17 @@ class DauphinDash {
             return;
         }
 
-        // Update stat card
-        document.getElementById('strava-total-runs').textContent = stats.totalRuns;
-        document.getElementById('strava-this-week').textContent = `${stats.thisWeekRuns} this week`;
+        // Update stat card (check if elements exist)
+        const totalRunsEl = document.getElementById('strava-total-runs');
+        const thisWeekEl = document.getElementById('strava-this-week');
+        
+        if (!totalRunsEl || !thisWeekEl) {
+            console.log('Strava UI elements not found - user not connected yet');
+            return;
+        }
+        
+        totalRunsEl.textContent = stats.totalRuns;
+        thisWeekEl.textContent = `${stats.thisWeekRuns} this week`;
 
         // Update detailed stats
         const useMiles = localStorage.getItem('strava-units') === 'miles';

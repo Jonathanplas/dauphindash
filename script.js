@@ -974,6 +974,7 @@ class DauphinDash {
         const disconnectedBox = document.getElementById('strava-disconnected');
         const connectedBox = document.getElementById('strava-connected');
         const chartCard = document.getElementById('strava-chart-card');
+        const mapCard = document.getElementById('strava-map-card');
         const stravaNote = document.getElementById('strava-note');
         const stravaLegendNote = document.getElementById('strava-legend-note');
 
@@ -981,12 +982,14 @@ class DauphinDash {
             disconnectedBox.style.display = 'none';
             connectedBox.style.display = 'block';
             chartCard.style.display = 'block';
+            if (mapCard) mapCard.style.display = 'block';
             if (stravaNote) stravaNote.style.display = 'block';
             if (stravaLegendNote) stravaLegendNote.style.display = 'block';
         } else {
             disconnectedBox.style.display = 'block';
             connectedBox.style.display = 'none';
             chartCard.style.display = 'none';
+            if (mapCard) mapCard.style.display = 'none';
             if (stravaNote) stravaNote.style.display = 'none';
             if (stravaLegendNote) stravaLegendNote.style.display = 'none';
         }
@@ -1041,9 +1044,6 @@ class DauphinDash {
         if (!mapCard || !mapImage) {
             return;
         }
-
-        // Show the map card
-        mapCard.style.display = 'block';
 
         // Generate Static Map URL using Google Maps API (no key needed for basic use)
         const polyline = latestRun.map.summary_polyline;

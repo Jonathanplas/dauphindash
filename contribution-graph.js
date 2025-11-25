@@ -37,12 +37,15 @@ class ContributionGraph {
         const width = (this.cellSize + this.cellGap) * weeks + 30; // 30 for day labels
         const height = (this.cellSize + this.cellGap) * 7 + 20; // 20 for month labels
         
-        // Create SVG
+        // Create SVG with viewBox for responsive scaling
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('width', width);
-        svg.setAttribute('height', height);
+        svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+        svg.setAttribute('width', '100%');
+        svg.setAttribute('height', 'auto');
+        svg.setAttribute('preserveAspectRatio', 'xMinYMin meet');
         svg.style.fontFamily = 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         svg.style.fontSize = '10px';
+        svg.style.maxHeight = '200px';
         
         // Clear container
         this.container.innerHTML = '';

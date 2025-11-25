@@ -112,7 +112,9 @@ class DauphinDash {
     }
 
     updateStats() {
-        const today = this.getTodayData();
+        const todayData = this.getTodayData();
+        const GOAL_WEIGHT = 160;
+        const GOAL_WORKOUTS_PER_WEEK = 5;
         
         // Update weight - show most recent weight, not just today's
         const weightElement = document.getElementById('current-weight');
@@ -126,14 +128,21 @@ class DauphinDash {
             const weightDate = new Date(recentWeight.date);
             const daysAgo = Math.floor((Date.now() - weightDate.getTime()) / 86400000);
             
+            // Calculate weight trend
+            const previousWeight = this.getPreviousWeight(recentWeight.date);
+            const weightTrend = this.calculateWeightTrend(recentWeight.weight, previousWeight, GOAL_WEIGHT);
+            
+            let changeText = '';
             if (daysAgo === 0) {
-                weightChangeElement.textContent = 'Today';
+                changeText = 'Today';
             } else if (daysAgo === 1) {
-                weightChangeElement.textContent = 'Yesterday';
+                changeText = 'Yesterday';
             } else {
-                weightChangeElement.textContent = `${daysAgo} days ago`;
+                changeText = `${daysAgo} days ago`;
             }
-            weightChangeElement.style.color = '#718096';
+            
+            weightChangeElement.innerHTML = `${changeText} ${weightTrend.indicator}`;
+            weightChangeElement.style.color = weightTrend.color;
         } else {
             weightElement.textContent = '--';
             weightChangeElement.textContent = 'No data';
@@ -149,7 +158,19 @@ class DauphinDash {
         const thisWeekLeetcode = Object.entries(this.data)
             .filter(([date]) => new Date(date) >= weekAgo)
             .reduce((sum, [, day]) => sum + (day.leetcode || 0), 0);
-        document.getElementById('leetcode-this-week').textContent = `${thisWeekLeetcode} this week`;
+        
+        // Calculate last week's LeetCode for comparison
+        const twoWeeksAgo = new Date(Date.now() - 14 * 86400000);
+        const lastWeekLeetcode = Object.entries(this.data)
+            .filter(([date]) => {
+                const d = new Date(date);
+                return d >= twoWeeksAgo && d < weekAgo;
+            })
+            .reduce((sum, [, day]) => sum + (day.leetcode || 0), 0);
+        
+        const leetcodeTrend = this.calculateLeetCodeTrend(thisWeekLeetcode, lastWeekLeetcode);
+        document.getElementById('leetcode-this-week').innerHTML = `${thisWeekLeetcode} this week ${leetcodeTrend.indicator}`;
+        document.getElementById('leetcode-this-week').style.color = leetcodeTrend.color;
 
         // Update workout stats (includes Strava runs)
         const workoutStreak = this.calculateWorkoutStreak();
@@ -158,7 +179,101 @@ class DauphinDash {
         const thisWeekWorkouts = Object.entries(this.data)
             .filter(([date]) => new Date(date) >= weekAgo)
             .reduce((sum, [, day]) => sum + (day.workout ? 1 : 0), 0);
-        document.getElementById('workout-this-week').textContent = `${thisWeekWorkouts} this week`;
+        
+        // Calculate workout trend based on goal and days into week
+        const today = new Date();
+        const daysSinceSunday = (today.getDay() === 0 ? 7 : today.getDay()); // Monday = 1, Sunday = 7
+        const workoutTrend = this.calculateWorkoutTrend(thisWeekWorkouts, daysSinceSunday, GOAL_WORKOUTS_PER_WEEK);
+        
+        document.getElementById('workout-this-week').innerHTML = `${thisWeekWorkouts} this week ${workoutTrend.indicator}`;
+        document.getElementById('workout-this-week').style.color = workoutTrend.color;
+    }
+
+    getPreviousWeight(currentDate) {
+        const sortedDates = Object.keys(this.data)
+            .filter(date => date < currentDate)
+            .sort()
+            .reverse();
+        
+        for (const date of sortedDates) {
+            if (this.data[date].weight !== null && this.data[date].weight !== undefined) {
+                return this.data[date].weight;
+            }
+        }
+        return null;
+    }
+
+    calculateWeightTrend(currentWeight, previousWeight, goalWeight) {
+        if (!previousWeight) {
+            return { indicator: '', color: '#718096' };
+        }
+
+        const diff = currentWeight - previousWeight;
+        const aboveGoal = currentWeight > goalWeight;
+        
+        if (diff > 0) {
+            // Weight went up
+            return {
+                indicator: '<span style="font-size: 0.9em;">↑</span>',
+                color: aboveGoal ? '#e53e3e' : '#38a169' // red if above goal, green if below
+            };
+        } else if (diff < 0) {
+            // Weight went down
+            return {
+                indicator: '<span style="font-size: 0.9em;">↓</span>',
+                color: aboveGoal ? '#38a169' : '#e53e3e' // green if above goal, red if below
+            };
+        } else {
+            // No change
+            return {
+                indicator: '<span style="font-size: 0.9em;">→</span>',
+                color: '#718096'
+            };
+        }
+    }
+
+    calculateLeetCodeTrend(thisWeek, lastWeek) {
+        if (thisWeek > lastWeek) {
+            return {
+                indicator: '<span style="font-size: 0.9em;">↑</span>',
+                color: '#38a169' // green
+            };
+        } else if (thisWeek < lastWeek) {
+            return {
+                indicator: '<span style="font-size: 0.9em;">↓</span>',
+                color: '#e53e3e' // red
+            };
+        } else {
+            return {
+                indicator: '<span style="font-size: 0.9em;">→</span>',
+                color: '#718096'
+            };
+        }
+    }
+
+    calculateWorkoutTrend(thisWeekWorkouts, daysSinceSunday, goalPerWeek) {
+        // Calculate expected workouts based on how far into the week we are
+        const expectedWorkouts = (daysSinceSunday / 7) * goalPerWeek;
+        
+        if (thisWeekWorkouts >= goalPerWeek) {
+            // Already hit goal!
+            return {
+                indicator: '<span style="font-size: 0.9em;">✓</span>',
+                color: '#38a169' // green
+            };
+        } else if (thisWeekWorkouts >= expectedWorkouts) {
+            // On track
+            return {
+                indicator: '<span style="font-size: 0.9em;">↑</span>',
+                color: '#38a169' // green
+            };
+        } else {
+            // Behind pace
+            return {
+                indicator: '<span style="font-size: 0.9em;">↓</span>',
+                color: '#e53e3e' // red
+            };
+        }
     }
 
     calculateWorkoutStreak() {

@@ -36,6 +36,9 @@ CREATE TABLE IF NOT EXISTS strava_activities (
     calories NUMERIC,
     achievement_count INTEGER,
     kudos_count INTEGER,
+    map_summary_polyline TEXT, -- Encoded polyline for route visualization
+    map_polyline TEXT, -- Detailed polyline (if available)
+    average_watts NUMERIC, -- Power output in watts
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );

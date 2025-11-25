@@ -41,7 +41,6 @@ class ContributionGraph {
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
         svg.setAttribute('width', '100%');
-        svg.setAttribute('height', 'auto');
         svg.setAttribute('preserveAspectRatio', 'xMinYMin meet');
         svg.style.fontFamily = 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         svg.style.fontSize = '10px';

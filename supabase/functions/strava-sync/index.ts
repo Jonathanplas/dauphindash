@@ -42,6 +42,11 @@ interface StravaActivity {
   calories?: number
   achievement_count: number
   kudos_count: number
+  average_watts?: number
+  map?: {
+    summary_polyline?: string
+    polyline?: string
+  }
 }
 
 serve(async (req) => {
@@ -308,6 +313,9 @@ async function syncActivities(
       calories: activity.calories,
       achievement_count: activity.achievement_count,
       kudos_count: activity.kudos_count,
+      average_watts: activity.average_watts,
+      map_summary_polyline: activity.map?.summary_polyline,
+      map_polyline: activity.map?.polyline,
     }))
 
     const { error: insertError } = await supabaseClient

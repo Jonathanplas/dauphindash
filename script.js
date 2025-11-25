@@ -1056,7 +1056,7 @@ class DauphinDash {
 
         // Get the most recent run with a map
         const runs = this.stravaSync.stravaData
-            .filter(a => a.type === 'Run' && a.map && a.map.summary_polyline)
+            .filter(a => a.type === 'Run' && a.map_summary_polyline)
             .sort((a, b) => new Date(b.start_date_local) - new Date(a.start_date_local));
 
         if (runs.length === 0) {
@@ -1080,7 +1080,7 @@ class DauphinDash {
         }
 
         // Decode polyline and create Leaflet map
-        const polyline = latestRun.map.summary_polyline;
+        const polyline = latestRun.map_summary_polyline;
         const coordinates = this.decodePolyline(polyline);
         
         if (coordinates.length === 0) {

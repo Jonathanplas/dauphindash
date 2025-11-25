@@ -40,9 +40,6 @@
                             <span class="legend-color workout"></span>
                             <span>Workout completed</span>
                         </div>
-                        <div class="legend-item" id="strava-legend-note" style="display: none; font-size: 0.85rem; color: #718096; font-style: italic;">
-                            <span>🏃 Auto-synced from Strava</span>
-                        </div>
                     </div>
                     <div id="contribution-graph"></div>
                 </div>
@@ -86,7 +83,6 @@
             </div>
 
             <div class="strava-section" id="strava-section">
-                <h2>🏃 Strava Integration</h2>
                 <div id="strava-disconnected" class="strava-connect-box">
                     <p>Connect your Strava account to automatically sync your running data.</p>
                     <button id="connect-strava-btn" class="strava-connect-btn">Connect with Strava</button>
@@ -183,7 +179,7 @@
                         <button id="sign-in-btn" class="supabase-btn">Sign In</button>
                     </div>
                     <div id="sync-connected" class="sync-state" style="display: none;">
-                        <p>✅ Synced as <span id="user-email"></span></p>
+                        <p> Synced as <span id="user-email"></span></p>
                         <a id="supabase-link" href="#" target="_blank" class="supabase-link">View Dashboard →</a>
                         <button id="sign-out-btn" class="supabase-btn-secondary">Sign Out</button>
                     </div>

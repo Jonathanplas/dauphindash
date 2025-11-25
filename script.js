@@ -317,14 +317,10 @@ class DauphinDash {
     }
 
     renderContributionGraph() {
-        // Use the new GitHub-style contribution graph
+        // Use the new GitHub-style contribution graph with intensity-based coloring
         const graph = new ContributionGraph('contribution-graph', this.data, {
             cellSize: 11,
-            cellGap: 3,
-            weightColor: '#0a843d',
-            leetcodeColor: '#1c4f8f',
-            workoutColor: '#ae9142',
-            combinedColor: '#8c4799'
+            cellGap: 3
         });
         graph.render();
     }

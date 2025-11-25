@@ -8,13 +8,24 @@ class ContributionGraph {
         this.monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         this.dayLabels = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
         
+        // GitHub-style intensity colors using dark gold
         this.colors = {
             empty: '#ebedf0',
-            weight: options.weightColor || '#0a843d',
-            leetcode: options.leetcodeColor || '#1c4f8f',
-            workout: options.workoutColor || '#ae9142',
-            combined: options.combinedColor || '#8c4799' // purple for days with multiple activities
+            level1: '#f4eed8', // 25% activity
+            level2: '#d9c596', // 50% activity
+            level3: '#b89f5f', // 75% activity
+            level4: '#8c7535'  // 100% activity - full dark gold
         };
+        
+        // Weights for activity calculation
+        this.weights = {
+            weight: 0.20,      // 20% for logging weight
+            workout: 0.25,     // 25% for workout
+            leetcode: 0.55     // 55% for LeetCode (scaled by problems solved)
+        };
+        
+        // Max LeetCode problems per day for scaling (anything above this is 100%)
+        this.maxLeetCodePerDay = 5;
     }
 
     render() {
@@ -139,20 +150,34 @@ class ContributionGraph {
 
     getCellColor(dayData) {
         const hasWeight = dayData.weight !== null && dayData.weight !== undefined;
-        const hasLeetcode = dayData.leetcode > 0;
         const hasWorkout = dayData.workout === true;
+        const leetcodeCount = dayData.leetcode || 0;
         
-        const activityCount = [hasWeight, hasLeetcode, hasWorkout].filter(Boolean).length;
+        // Calculate activity score (0 to 1)
+        let activityScore = 0;
         
-        if (activityCount === 0) return this.colors.empty;
-        if (activityCount >= 2) return this.colors.combined;
+        // Add weight contribution (20%)
+        if (hasWeight) {
+            activityScore += this.weights.weight;
+        }
         
-        // Single activity
-        if (hasWeight) return this.colors.weight;
-        if (hasLeetcode) return this.colors.leetcode;
-        if (hasWorkout) return this.colors.workout;
+        // Add workout contribution (25%)
+        if (hasWorkout) {
+            activityScore += this.weights.workout;
+        }
         
-        return this.colors.empty;
+        // Add LeetCode contribution (55%, scaled by problems solved)
+        if (leetcodeCount > 0) {
+            const leetcodeRatio = Math.min(leetcodeCount / this.maxLeetCodePerDay, 1);
+            activityScore += this.weights.leetcode * leetcodeRatio;
+        }
+        
+        // Map activity score to color levels
+        if (activityScore === 0) return this.colors.empty;
+        if (activityScore <= 0.25) return this.colors.level1;
+        if (activityScore <= 0.50) return this.colors.level2;
+        if (activityScore <= 0.75) return this.colors.level3;
+        return this.colors.level4;
     }
 
     getTooltipText(dateKey, dayData) {

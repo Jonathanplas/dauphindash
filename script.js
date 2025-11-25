@@ -287,8 +287,8 @@ class DauphinDash {
         } else {
             // Behind pace
             return {
-                indicator: '<span style="font-size: 0.9em;">↓</span>',
-                color: '#e53e3e' // red
+                indicator: downIcon,
+                color: '#e53e3e'
             };
         }
     }

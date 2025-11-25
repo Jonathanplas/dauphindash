@@ -1042,10 +1042,15 @@ class DauphinDash {
             return;
         }
 
-        // Update detailed stats
+        // Update detailed stats (check if connected section is visible)
+        const distanceEl = document.getElementById('strava-total-distance');
+        if (!distanceEl) {
+            console.log('Strava stats UI not visible yet');
+            return;
+        }
+
         const useMiles = localStorage.getItem('strava-units') === 'miles';
-        document.getElementById('strava-total-distance').textContent = 
-            useMiles ? `${stats.totalDistanceMiles} mi` : `${stats.totalDistanceKm} km`;
+        distanceEl.textContent = useMiles ? `${stats.totalDistanceMiles} mi` : `${stats.totalDistanceKm} km`;
         document.getElementById('strava-avg-pace').textContent = 
             useMiles ? `${stats.avgPaceMinPerMile}/mi` : `${stats.avgPaceMinPerKm}/km`;
         document.getElementById('strava-month-distance').textContent = 

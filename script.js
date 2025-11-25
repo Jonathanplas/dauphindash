@@ -205,47 +205,60 @@ class DauphinDash {
 
     calculateWeightTrend(currentWeight, previousWeight, goalWeight) {
         if (!previousWeight) {
-            return { indicator: '', color: '#718096' };
+            return { indicator: '', color: '#718096', diff: 0 };
         }
 
         const diff = currentWeight - previousWeight;
         const aboveGoal = currentWeight > goalWeight;
+        const absDiff = Math.abs(diff).toFixed(1);
+        
+        const upIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-left: 4px;"><path d="M7 14l5-5 5 5z"/></svg>';
+        const downIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-left: 4px;"><path d="M7 10l5 5 5-5z"/></svg>';
+        const sameIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-left: 4px;"><path d="M8 12h8"/></svg>';
         
         if (diff > 0) {
             // Weight went up
             return {
-                indicator: '<span style="font-size: 0.9em;">↑</span>',
-                color: aboveGoal ? '#e53e3e' : '#38a169' // red if above goal, green if below
+                indicator: `<span style="font-size: 0.85em;">(+${absDiff} lbs ${upIcon})</span>`,
+                color: aboveGoal ? '#e53e3e' : '#38a169',
+                diff: diff
             };
         } else if (diff < 0) {
             // Weight went down
             return {
-                indicator: '<span style="font-size: 0.9em;">↓</span>',
-                color: aboveGoal ? '#38a169' : '#e53e3e' // green if above goal, red if below
+                indicator: `<span style="font-size: 0.85em;">(-${absDiff} lbs ${downIcon})</span>`,
+                color: aboveGoal ? '#38a169' : '#e53e3e',
+                diff: diff
             };
         } else {
             // No change
             return {
-                indicator: '<span style="font-size: 0.9em;">→</span>',
-                color: '#718096'
+                indicator: `<span style="font-size: 0.85em;">(${sameIcon})</span>`,
+                color: '#718096',
+                diff: 0
             };
         }
     }
 
     calculateLeetCodeTrend(thisWeek, lastWeek) {
-        if (thisWeek > lastWeek) {
+        const diff = thisWeek - lastWeek;
+        const upIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-left: 4px;"><path d="M7 14l5-5 5 5z"/></svg>';
+        const downIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-left: 4px;"><path d="M7 10l5 5 5-5z"/></svg>';
+        const sameIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-left: 4px;"><path d="M8 12h8"/></svg>';
+        
+        if (diff > 0) {
             return {
-                indicator: '<span style="font-size: 0.9em;">↑</span>',
-                color: '#38a169' // green
+                indicator: upIcon,
+                color: '#38a169'
             };
-        } else if (thisWeek < lastWeek) {
+        } else if (diff < 0) {
             return {
-                indicator: '<span style="font-size: 0.9em;">↓</span>',
-                color: '#e53e3e' // red
+                indicator: downIcon,
+                color: '#e53e3e'
             };
         } else {
             return {
-                indicator: '<span style="font-size: 0.9em;">→</span>',
+                indicator: sameIcon,
                 color: '#718096'
             };
         }
@@ -255,17 +268,21 @@ class DauphinDash {
         // Calculate expected workouts based on how far into the week we are
         const expectedWorkouts = (daysSinceSunday / 7) * goalPerWeek;
         
+        const checkIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-left: 4px;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
+        const upIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-left: 4px;"><path d="M7 14l5-5 5 5z"/></svg>';
+        const downIcon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-left: 4px;"><path d="M7 10l5 5 5-5z"/></svg>';
+        
         if (thisWeekWorkouts >= goalPerWeek) {
             // Already hit goal!
             return {
-                indicator: '<span style="font-size: 0.9em;">✓</span>',
-                color: '#38a169' // green
+                indicator: checkIcon,
+                color: '#38a169'
             };
         } else if (thisWeekWorkouts >= expectedWorkouts) {
             // On track
             return {
-                indicator: '<span style="font-size: 0.9em;">↑</span>',
-                color: '#38a169' // green
+                indicator: upIcon,
+                color: '#38a169'
             };
         } else {
             // Behind pace
